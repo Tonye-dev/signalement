@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+
+<div th:fragment="sidebar" id="sidebar-wrapper">
+    <style>
+        #sidebar-wrapper {
+            width: 260px;
+            min-height: 100vh;
+            background: linear-gradient(180deg, #0d1117 0%, #161b27 60%, #0d1117 100%);
+            display: flex;
+            flex-direction: column;
+            position: fixed;
+            top: 0; left: 0; bottom: 0;
+            z-index: 200;
+            border-right: 1px solid rgba(255,255,255,.05);
+            overflow-y: auto;
+        }
+
+        #sidebar-wrapper::-webkit-scrollbar { width: 3px; }
+        #sidebar-wrapper::-webkit-scrollbar-thumb { background: rgba(255,255,255,.1); border-radius: 3px; }
+
+        .sb-logo {
+            padding: 26px 24px 20px;
+            border-bottom: 1px solid rgba(255,255,255,.06);
+            display: flex;
+            align-items: center;
+            gap: 11px;
+            flex-shrink: 0;
+        }
+
+        .sb-logo-icon {
+            width: 36px; height: 36px;
+            background: linear-gradient(135deg, #4f8ef7, #38d9a9);
+            border-radius: 10px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: .9rem; color: #fff; font-weight: 800;
+            flex-shrink: 0;
+        }
+
+        .sb-logo-text {
+            font-family: 'Syne', sans-serif;
+            font-size: 1.1rem;
+            font-weight: 800;
+            color: #fff;
+            letter-spacing: .04em;
+        }
+
+        .sb-section-label {
+            padding: 18px 24px 5px;
+            font-size: .6rem;
+            font-weight: 700;
+            letter-spacing: .14em;
+            text-transform: uppercase;
+            color: rgba(255,255,255,.18);
+        }
+
+        .sb-nav { flex: 1; padding: 8px 12px; }
+
+        .sb-link {
+            display: flex;
+            align-items: center;
+            gap: 11px;
+            padding: 10px 14px;
+            border-radius: 10px;
+            color: rgba(255,255,255,.45);
+            text-decoration: none;
+            font-size: .84rem;
+            font-weight: 500;
+            margin-bottom: 2px;
+            transition: all .18s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .sb-link::before {
+            content: '';
+            position: absolute; inset: 0;
+            background: linear-gradient(90deg, rgba(79,142,247,.12), transparent);
+            opacity: 0;
+            transition: opacity .18s;
+            border-radius: 10px;
+        }
+
+        .sb-link:hover { color: #fff; }
+        .sb-link:hover::before { opacity: 1; }
+
+        .sb-link.active {
+            color: #fff;
+            background: rgba(79,142,247,.15);
+            border: 1px solid rgba(79,142,247,.25);
+        }
+        .sb-link.active .sb-link-icon { color: #4f8ef7; }
+
+        .sb-link-icon {
+            font-size: 1rem;
+            min-width: 18px;
+            text-align: center;
+            flex-shrink: 0;
+        }
+
+        .sb-link.sb-action {
+            background: rgba(79,142,247,.1);
+            color: rgba(255,255,255,.85);
+            border: 1px solid rgba(79,142,247,.2);
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+        .sb-link.sb-action:hover { background: rgba(79,142,247,.2); color: #fff; }
+        .sb-link.sb-action .sb-link-icon { color: #4f8ef7; }
+
+        .sb-divider {
+            margin: 8px 12px;
+            border: none;
+            border-top: 1px solid rgba(255,255,255,.05);
+        }
+
+        .sb-footer {
+            padding: 16px 24px;
+            border-top: 1px solid rgba(255,255,255,.05);
+            flex-shrink: 0;
+        }
+
+        .sb-logout {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 9px 14px;
+            border-radius: 10px;
+            color: rgba(247,111,142,.55);
+            text-decoration: none;
+            font-size: .83rem;
+            font-weight: 500;
+            transition: all .18s ease;
+        }
+        .sb-logout:hover { color: #f76f8e; background: rgba(247,111,142,.08); }
+
+        .sb-copyright {
+            font-size: .62rem;
+            color: rgba(255,255,255,.1);
+            margin-top: 10px;
+            text-align: center;
+        }
+    </style>
+
+    <!-- ── LOGO ── -->
+    <div class="sb-logo">
+        <div class="sb-logo-icon">A</div>
+        <span class="sb-logo-text">ASPU</span>
+    </div>
+
+    <nav class="sb-nav">
+
+        <!-- ══════════════════════════════════
+             SUPER ADMIN
+        ══════════════════════════════════ -->
+        <div th:if="${role == 'SUPERADMIN'}">
+
+            <div class="sb-section-label">Général</div>
+            <a th:href="@{/superadmin/dashboard}" class="sb-link">
+                <i class="bi bi-speedometer2 sb-link-icon"></i> Tableau de bord
+            </a>
+
+            <hr class="sb-divider">
+            <div class="sb-section-label">Mairies</div>
+            <a th:href="@{/superadmin/mairies}" class="sb-link">
+                <i class="bi bi-building sb-link-icon"></i> Liste des mairies
+            </a>
+            <a th:href="@{/superadmin/mairies/ajouter}" class="sb-link">
+                <i class="bi bi-building-add sb-link-icon"></i> Ajouter une mairie
+            </a>
+
+            <hr class="sb-divider">
+            <div class="sb-section-label">Gestion des comptes</div>
+            <a th:href="@{/superadmin/administrateurs}" class="sb-link">
+                <i class="bi bi-person-badge sb-link-icon"></i> Administrateurs
+            </a>
+            <a th:href="@{/superadmin/administrateurs/ajouter}" class="sb-link">
+                <i class="bi bi-person-plus sb-link-icon"></i> Ajouter un administrateur
+            </a>
+            <a th:href="@{/superadmin/utilisateurs}" class="sb-link">
+                <i class="bi bi-people sb-link-icon"></i> Tous les utilisateurs
+            </a>
+
+            <hr class="sb-divider">
+            <div class="sb-section-label">Configuration</div>
+            <a th:href="@{/superadmin/types-problemes}" class="sb-link">
+                <i class="bi bi-tags sb-link-icon"></i> Types de problèmes
+            </a>
+            <a th:href="@{/superadmin/types-problemes/ajouter}" class="sb-link">
+                <i class="bi bi-tag sb-link-icon"></i> Créer un type
+            </a>
+
+            <hr class="sb-divider">
+            <div class="sb-section-label">Mon compte</div>
+            <a th:href="@{/superadmin/profil}" class="sb-link">
+                <i class="bi bi-person-circle sb-link-icon"></i> Mon profil
+            </a>
+
+        </div>
+
+        <!-- ══════════════════════════════════
+             ADMINISTRATEUR MUNICIPAL
+        ══════════════════════════════════ -->
+        <div th:if="${role == 'ADMINISTRATEUR'}">
+
+            <div class="sb-section-label">Général</div>
+            <a th:href="@{/administrateur/dashboard}" class="sb-link">
+                <i class="bi bi-speedometer2 sb-link-icon"></i> Tableau de bord
+            </a>
+
+            <hr class="sb-divider">
+            <div class="sb-section-label">Signalements</div>
+            <a th:href="@{/administrateur/problemes}" class="sb-link">
+                <i class="bi bi-exclamation-triangle sb-link-icon"></i> Tous les signalements
+            </a>
+            <a th:href="@{/administrateur/problemes/en-attente}" class="sb-link">
+                <i class="bi bi-hourglass-split sb-link-icon"></i> En attente
+            </a>
+            <a th:href="@{/administrateur/problemes/en-cours}" class="sb-link">
+                <i class="bi bi-arrow-repeat sb-link-icon"></i> En cours de traitement
+            </a>
+            <a th:href="@{/administrateur/problemes/resolus}" class="sb-link">
+                <i class="bi bi-check2-circle sb-link-icon"></i> Résolus
+            </a>
+
+            <hr class="sb-divider">
+            <div class="sb-section-label">Rapports</div>
+            <a th:href="@{/administrateur/rapports}" class="sb-link">
+                <i class="bi bi-file-earmark-text sb-link-icon"></i> Mes rapports
+            </a>
+            <a th:href="@{/administrateur/rapports/ajouter}" class="sb-link">
+                <i class="bi bi-file-earmark-plus sb-link-icon"></i> Rédiger un rapport
+            </a>
+
+            <hr class="sb-divider">
+            <div class="sb-section-label">Mon compte</div>
+            <a th:href="@{/administrateur/profil}" class="sb-link">
+                <i class="bi bi-person-circle sb-link-icon"></i> Mon profil
+            </a>
+            <a th:href="@{/administrateur/profil/modifier}" class="sb-link">
+                <i class="bi bi-pencil-square sb-link-icon"></i> Modifier mes informations
+            </a>
+
+        </div>
+
+        <!-- ══════════════════════════════════
+             CITOYEN
+        ══════════════════════════════════ -->
+        <div th:if="${role == 'CITOYEN'}">
+
+            <div class="sb-section-label">Général</div>
+            <a th:href="@{/citoyen/dashboard}" class="sb-link">
+                <i class="bi bi-speedometer2 sb-link-icon"></i> Tableau de bord
+            </a>
+
+            <hr class="sb-divider">
+            <div class="sb-section-label">Mes signalements</div>
+
+            <a th:href="@{/citoyen/signaler}" class="sb-link sb-action">
+                <i class="bi bi-plus-circle sb-link-icon"></i> Signaler un problème
+            </a>
+            <a th:href="@{/citoyen/mes-signalements}" class="sb-link">
+                <i class="bi bi-list-ul sb-link-icon"></i> Tous mes signalements
+            </a>
+            <a th:href="@{/citoyen/mes-signalements/en-cours}" class="sb-link">
+                <i class="bi bi-arrow-repeat sb-link-icon"></i> En cours de traitement
+            </a>
+            <a th:href="@{/citoyen/mes-signalements/resolus}" class="sb-link">
+                <i class="bi bi-check2-circle sb-link-icon"></i> Résolus
+            </a>
+
+            <hr class="sb-divider">
+            <div class="sb-section-label">Mon compte</div>
+            <a th:href="@{/citoyen/profil}" class="sb-link">
+                <i class="bi bi-person-circle sb-link-icon"></i> Mon profil
+            </a>
+            <a th:href="@{/citoyen/profil/modifier}" class="sb-link">
+                <i class="bi bi-pencil-square sb-link-icon"></i> Modifier mes informations
+            </a>
+            <a th:href="@{/citoyen/profil/photo}" class="sb-link">
+                <i class="bi bi-camera sb-link-icon"></i> Ma photo de profil
+            </a>
+
+        </div>
+
+    </nav>
+
+    <div class="sb-footer">
+        <a th:href="@{/logout}" class="sb-logout">
+            <i class="bi bi-box-arrow-left"></i> Déconnexion
+        </a>
+        <div class="sb-copyright">&copy; 2026 ASPU</div>
+    </div>
+
+    <script>
+        document.querySelectorAll('.sb-link').forEach(a => {
+            try {
+                if (window.location.pathname === new URL(a.href, location.origin).pathname) {
+                    a.classList.add('active');
+                }
+            } catch(e) {}
+        });
+    </script>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+<div th:fragment="content">
+<style>
+    :root { --accent:#4f8ef7; --accent2:#38d9a9; --accent3:#f7934f; --accent4:#f76f8e; --bg:#f0f4fb; --card-bg:#fff; --text-main:#1a2236; --text-muted:#7b8fb5; --border:#e4eaf5; }
+
+    .page-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:24px; flex-wrap:wrap; gap:12px; }
+    .page-header-left h2 { font-family:'Syne',sans-serif; font-size:1.3rem; font-weight:800; color:var(--text-main); margin:0; }
+    .page-header-left p { font-size:.82rem; color:var(--text-muted); margin:4px 0 0; }
+    .btn-primary-aspu { background:var(--accent); color:#fff; border:none; border-radius:10px; padding:10px 20px; font-size:.84rem; font-weight:600; text-decoration:none; display:inline-flex; align-items:center; gap:7px; transition:background .18s,transform .18s; cursor:pointer; }
+    .btn-primary-aspu:hover { background:#3a7de8; color:#fff; transform:translateY(-2px); }
+
+    .filters-bar { display:flex; align-items:center; gap:10px; margin-bottom:18px; flex-wrap:wrap; }
+    .filter-tab { background:var(--card-bg); border:1px solid var(--border); border-radius:50px; padding:6px 16px; font-size:.78rem; font-weight:600; color:var(--text-muted); cursor:pointer; transition:all .15s; user-select:none; }
+    .filter-tab.active { background:rgba(79,142,247,.1); border-color:rgba(79,142,247,.3); color:var(--accent); }
+    .search-wrap { position:relative; margin-left:auto; }
+    .search-wrap input { background:var(--card-bg); border:1px solid var(--border); border-radius:8px; padding:7px 12px 7px 34px; font-size:.82rem; color:var(--text-main); outline:none; transition:border .18s; width:200px; }
+    .search-wrap input:focus { border-color:var(--accent); }
+    .search-wrap i { position:absolute; left:10px; top:50%; transform:translateY(-50%); color:var(--text-muted); font-size:.85rem; }
+
+    .signalements-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(320px,1fr)); gap:16px; }
+    .signalement-card { background:var(--card-bg); border-radius:16px; border:1px solid var(--border); transition:box-shadow .2s,transform .2s; animation:slideUp .45s ease both; }
+    .signalement-card:hover { box-shadow:0 10px 28px rgba(0,0,0,.09); transform:translateY(-3px); }
+
+    .card-stripe { height:4px; border-radius:16px 16px 0 0; }
+    .card-stripe.SIGNALE  { background:var(--accent3); }
+    .card-stripe.EN_COURS { background:var(--accent); }
+    .card-stripe.RESOLU   { background:var(--accent2); }
+
+    .card-body { padding:18px; }
+    .card-header-row { display:flex; align-items:flex-start; justify-content:space-between; gap:10px; margin-bottom:10px; }
+    .card-titre { font-family:'Syne',sans-serif; font-weight:700; font-size:.92rem; color:var(--text-main); }
+    .statut-badge { display:inline-flex; align-items:center; gap:5px; border-radius:50px; padding:3px 10px; font-size:.71rem; font-weight:600; white-space:nowrap; flex-shrink:0; }
+    .SIGNALE  { background:rgba(247,147,79,.1);  color:var(--accent3); }
+    .EN_COURS { background:rgba(79,142,247,.1);  color:var(--accent); }
+    .RESOLU   { background:rgba(56,217,169,.1);  color:var(--accent2); }
+
+    .card-type { font-size:.76rem; color:var(--accent); background:rgba(79,142,247,.08); border-radius:50px; padding:2px 9px; display:inline-block; margin-bottom:8px; }
+    .card-desc { font-size:.82rem; color:var(--text-muted); line-height:1.5; margin-bottom:10px; overflow:hidden; max-height:3em; }
+    .card-meta { display:flex; align-items:center; gap:14px; flex-wrap:wrap; margin-bottom:10px; }
+    .card-meta span { font-size:.74rem; color:var(--text-muted); display:flex; align-items:center; gap:4px; }
+
+    /* Temps résolution */
+    .temps-resolution { display:inline-flex; align-items:center; gap:5px; background:rgba(56,217,169,.1); color:var(--accent2); border-radius:50px; padding:4px 12px; font-size:.75rem; font-weight:600; margin-bottom:12px; }
+
+    /* Section photos avant/après */
+    .photos-section { margin-bottom:12px; }
+    .photos-section-title { font-size:.7rem; font-weight:700; text-transform:uppercase; letter-spacing:.08em; margin-bottom:6px; display:flex; align-items:center; gap:5px; }
+    .photos-section-title.avant { color:var(--text-muted); }
+    .photos-section-title.apres { color:var(--accent2); }
+    .photos-row { display:flex; gap:6px; flex-wrap:wrap; }
+    .photo-thumb { width:52px; height:52px; border-radius:8px; object-fit:cover; border:1px solid var(--border); cursor:pointer; transition:transform .15s; }
+    .photo-thumb:hover { transform:scale(1.06); }
+    .photo-more { width:52px; height:52px; border-radius:8px; background:var(--bg); border:1px solid var(--border); display:flex; align-items:center; justify-content:center; font-size:.72rem; font-weight:600; color:var(--text-muted); }
+
+    /* Bouton ajout photos */
+    .btn-add-photos { display:inline-flex; align-items:center; gap:6px; font-size:.78rem; font-weight:600; color:var(--accent); background:rgba(79,142,247,.08); border:1px solid rgba(79,142,247,.2); border-radius:8px; padding:7px 14px; cursor:pointer; transition:all .15s; width:100%; justify-content:center; margin-top:4px; }
+    .btn-add-photos:hover { background:rgba(79,142,247,.15); }
+
+    /* Pagination */
+    .pagination-bar { display:flex; align-items:center; justify-content:center; gap:6px; margin-top:24px; flex-wrap:wrap; }
+    .page-btn { background:var(--card-bg); border:1px solid var(--border); border-radius:8px; padding:7px 13px; font-size:.82rem; font-weight:600; cursor:pointer; color:var(--text-muted); transition:all .15s; }
+    .page-btn:hover, .page-btn.active { background:var(--accent); color:#fff; border-color:var(--accent); }
+
+    /* Modal photos */
+    .modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,.45); z-index:1000; align-items:center; justify-content:center; backdrop-filter:blur(3px); }
+    .modal-overlay.open { display:flex; }
+    .modal-box { background:var(--card-bg); border-radius:20px; padding:28px; max-width:500px; width:92%; animation:popIn .22s ease; box-shadow:0 20px 60px rgba(0,0,0,.15); }
+    @keyframes popIn { from{opacity:0;transform:scale(.93)} to{opacity:1;transform:scale(1)} }
+    .modal-title { font-family:'Syne',sans-serif; font-size:1rem; font-weight:800; color:var(--text-main); margin-bottom:4px; display:flex; align-items:center; gap:8px; }
+    .modal-sub { font-size:.8rem; color:var(--text-muted); margin-bottom:18px; }
+    .upload-zone { border:2px dashed var(--border); border-radius:12px; padding:26px; text-align:center; cursor:pointer; transition:all .18s; background:var(--bg); }
+    .upload-zone:hover,.upload-zone.drag-over { border-color:var(--accent); background:rgba(79,142,247,.04); }
+    .upload-zone i { font-size:1.8rem; color:var(--text-muted); display:block; margin-bottom:8px; }
+    .upload-zone p { font-size:.82rem; color:var(--text-muted); margin:0; }
+    .upload-zone p span { color:var(--accent); font-weight:600; }
+    .photos-preview { display:flex; flex-wrap:wrap; gap:8px; margin-top:12px; }
+    .photo-thumb-preview { position:relative; width:72px; height:72px; border-radius:9px; overflow:hidden; border:1px solid var(--border); }
+    .photo-thumb-preview img { width:100%; height:100%; object-fit:cover; }
+    .photo-thumb-preview button { position:absolute; top:3px; right:3px; background:rgba(0,0,0,.55); color:#fff; border:none; border-radius:50%; width:18px; height:18px; cursor:pointer; font-size:.65rem; display:flex; align-items:center; justify-content:center; }
+    .modal-actions { display:flex; gap:10px; margin-top:16px; padding-top:14px; border-top:1px solid var(--border); }
+    .btn-confirm { background:var(--accent); color:#fff; border:none; border-radius:10px; padding:11px 24px; font-size:.86rem; font-weight:600; cursor:pointer; flex:1; display:flex; align-items:center; justify-content:center; gap:7px; }
+    .btn-confirm:disabled { opacity:.6; cursor:not-allowed; }
+    .btn-cancel { background:var(--bg); color:var(--text-muted); border:1px solid var(--border); border-radius:10px; padding:11px 18px; font-size:.86rem; cursor:pointer; }
+    .btn-cancel:hover { border-color:var(--accent4); color:var(--accent4); }
+
+    /* Lightbox */
+    .lightbox { display:none; position:fixed; inset:0; background:rgba(0,0,0,.85); z-index:2000; align-items:center; justify-content:center; }
+    .lightbox.open { display:flex; }
+    .lightbox img { max-width:90vw; max-height:85vh; border-radius:12px; }
+    .lightbox-close { position:fixed; top:20px; right:24px; color:#fff; font-size:1.6rem; cursor:pointer; background:rgba(255,255,255,.1); border:none; border-radius:50%; width:40px; height:40px; display:flex; align-items:center; justify-content:center; }
+
+    .empty-state { padding:60px 24px; text-align:center; color:var(--text-muted); background:var(--card-bg); border-radius:18px; border:1px solid var(--border); }
+    .empty-state i { font-size:2.5rem; opacity:.2; display:block; margin-bottom:14px; }
+
+    @keyframes slideUp { from{opacity:0;transform:translateY(18px)} to{opacity:1;transform:translateY(0)} }
+    @keyframes spin { to{transform:rotate(360deg);} }
+    @media(max-width:600px) { .signalements-grid { grid-template-columns:1fr; } }
+</style>
+
+<div class="page-header">
+    <div class="page-header-left">
+        <h2><i class="bi bi-list-ul me-2" style="color:var(--accent);"></i>Mes signalements</h2>
+        <p>Suivez l'état de tous vos signalements</p>
+    </div>
+    <a th:href="@{/citoyen/signaler}" class="btn-primary-aspu">
+        <i class="bi bi-plus-circle"></i> Nouveau signalement
+    </a>
+</div>
+
+<div class="filters-bar">
+    <span class="filter-tab active" onclick="filtrer('tous', this)">Tous</span>
+    <span class="filter-tab" onclick="filtrer('SIGNALE', this)">Signalés</span>
+    <span class="filter-tab" onclick="filtrer('EN_COURS', this)">En cours</span>
+    <span class="filter-tab" onclick="filtrer('RESOLU', this)">Résolus</span>
+    <div class="search-wrap">
+        <i class="bi bi-search"></i>
+        <input type="text" id="searchInput" placeholder="Rechercher...">
+    </div>
+</div>
+
+<div th:if="${problemes == null or problemes.isEmpty()}" class="empty-state">
+    <i class="bi bi-clipboard-x"></i>
+    <p>Vous n'avez encore aucun signalement.</p>
+    <a th:href="@{/citoyen/signaler}" class="btn-primary-aspu" style="display:inline-flex;margin-top:14px;">
+        <i class="bi bi-plus-circle"></i> Faire mon premier signalement
+    </a>
+</div>
+
+<div class="signalements-grid" id="signalementsGrid" th:unless="${problemes == null or problemes.isEmpty()}">
+
+    <div th:each="p, stat : ${problemes}"
+         class="signalement-card"
+         th:data-statut="${p.statut.name()}"
+         th:style="'animation-delay:' + ${stat.index * 0.06} + 's'">
+
+        <div class="card-stripe" th:classappend="${p.statut.name()}"></div>
+
+        <div class="card-body">
+            <div class="card-header-row">
+                <div class="card-titre" th:text="${p.titre}">Titre</div>
+                <span th:switch="${p.statut.name()}">
+                    <span th:case="'SIGNALE'"  class="statut-badge SIGNALE"><i class="bi bi-flag-fill"></i> Signalé</span>
+                    <span th:case="'EN_COURS'" class="statut-badge EN_COURS"><i class="bi bi-arrow-repeat"></i> En cours</span>
+                    <span th:case="'RESOLU'"   class="statut-badge RESOLU"><i class="bi bi-check-circle-fill"></i> Résolu</span>
+                </span>
+            </div>
+
+            <span class="card-type" th:if="${p.typeProbleme != null}" th:text="${p.typeProbleme.nomType}">Type</span>
+            <div class="card-desc" th:text="${p.description}">Description...</div>
+
+            <div class="card-meta">
+                <span><i class="bi bi-geo-alt"></i> <span th:text="${p.quartier}">Quartier</span></span>
+                <span><i class="bi bi-calendar3"></i>
+                    <span th:text="${#temporals.format(p.dateSignalement, 'dd/MM/yyyy')}">Date</span>
+                </span>
+            </div>
+
+            <!-- Temps de résolution -->
+            <div class="temps-resolution"
+                 th:if="${p.statut.name() == 'RESOLU' and p.dateResolution != null}">
+                <i class="bi bi-stopwatch-fill"></i>
+                Résolu en <strong th:text="${p.tempsResolutionFormate}" style="margin-left:3px;">—</strong>
+            </div>
+
+            <!-- Photos AVANT (citoyen) -->
+            <div class="photos-section" th:if="${p.photos != null and !p.photos.isEmpty()}">
+                <div class="photos-section-title avant">
+                    <i class="bi bi-camera"></i> Photos du signalement
+                </div>
+                <div class="photos-row">
+                    <th:block th:each="photo, pStat : ${p.photos}" th:if="${pStat.index < 4}">
+                        <img class="photo-thumb" th:src="@{${photo.chemin}}" alt="Avant"
+                             th:onclick="'openLightbox(\'' + ${photo.chemin} + '\')'">
+                    </th:block>
+                    <div class="photo-more" th:if="${p.photos.size() > 4}"
+                         th:text="'+' + ${p.photos.size() - 4}">+1</div>
+                </div>
+            </div>
+
+            <!-- Photos APRÈS (admin - résolution) -->
+            <div class="photos-section"
+                 th:if="${p.photosResolution != null and !p.photosResolution.isEmpty()}">
+                <div class="photos-section-title apres">
+                    <i class="bi bi-check-circle"></i> Photos après résolution
+                </div>
+                <div class="photos-row">
+                    <th:block th:each="photo, pStat : ${p.photosResolution}" th:if="${pStat.index < 4}">
+                        <img class="photo-thumb" th:src="@{${photo.chemin}}" alt="Après"
+                             th:onclick="'openLightbox(\'' + ${photo.chemin} + '\')'">
+                    </th:block>
+                    <div class="photo-more" th:if="${p.photosResolution.size() > 4}"
+                         th:text="'+' + ${p.photosResolution.size() - 4}">+1</div>
+                </div>
+            </div>
+
+            <!-- Bouton ajout photos si pas résolu -->
+            <button th:if="${p.statut.name() != 'RESOLU'}"
+                    class="btn-add-photos"
+                    th:data-id="${p.id}"
+                    th:data-titre="${p.titre}"
+                    onclick="ouvrirModalPhotos(this.dataset.id, this.dataset.titre)">
+                <i class="bi bi-camera-plus"></i> Ajouter des photos
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Pagination -->
+<div class="pagination-bar" id="paginationBar"></div>
+
+<!-- Modal ajout photos -->
+<div class="modal-overlay" id="modalPhotos">
+    <div class="modal-box">
+        <div class="modal-title"><i class="bi bi-camera-plus"></i> Ajouter des photos</div>
+        <div class="modal-sub" id="modalPhotosTitre">Signalement</div>
+        <div class="upload-zone" id="uploadZoneModal" onclick="document.getElementById('photosInputModal').click()">
+            <i class="bi bi-cloud-arrow-up"></i>
+            <p>Glissez ou <span>cliquez pour sélectionner</span></p>
+            <input type="file" id="photosInputModal" multiple accept="image/*" style="display:none;">
+        </div>
+        <div class="photos-preview" id="photosPreviewModal"></div>
+        <div class="modal-actions">
+            <button class="btn-confirm" id="btnConfirmPhotos" onclick="envoyerPhotos()" disabled>
+                <i class="bi bi-cloud-upload"></i> Envoyer
+            </button>
+            <button class="btn-cancel" onclick="fermerModal()">Annuler</button>
+        </div>
+    </div>
+</div>
+
+<!-- Lightbox -->
+<div class="lightbox" id="lightbox" onclick="closeLightbox()">
+    <button class="lightbox-close" onclick="closeLightbox()"><i class="bi bi-x"></i></button>
+    <img id="lightboxImg" src="" alt="">
+</div>
+
+<!-- Toast -->
+<div id="toast" style="display:none;position:fixed;top:20px;right:20px;z-index:2000;background:#1a2236;color:#fff;padding:12px 20px;border-radius:12px;font-size:.84rem;box-shadow:0 8px 24px rgba(0,0,0,.2);">
+    <span id="toastMsg"></span>
+</div>
+
+<script th:inline="javascript">
+    const citoyenId = /*[[${currentUser?.id}]]*/ null;
+    const PAGE_SIZE = 6;
+    let currentPage = 1;
+    let allCards = [];
+    let currentProblemeId = null;
+    let selectedFiles = [];
+
+    window.addEventListener('load', () => {
+        allCards = [...document.querySelectorAll('.signalement-card')];
+        renderPage();
+    });
+
+    function renderPage() {
+        const visible = allCards.filter(c => c.style.display !== 'none');
+        const total = Math.ceil(visible.length / PAGE_SIZE);
+        visible.forEach((c, i) => {
+            c.style.display = (i >= (currentPage-1)*PAGE_SIZE && i < currentPage*PAGE_SIZE) ? '' : 'none';
+        });
+        const bar = document.getElementById('paginationBar');
+        bar.innerHTML = '';
+        if (total > 1) {
+            for (let i=1; i<=total; i++) {
+                const btn = document.createElement('button');
+                btn.className = 'page-btn' + (i===currentPage?' active':'');
+                btn.textContent = i;
+                btn.onclick = () => { currentPage=i; renderPage(); };
+                bar.appendChild(btn);
+            }
+        }
+    }
+
+    function filtrer(statut, el) {
+        document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
+        el.classList.add('active');
+        allCards = [...document.querySelectorAll('.signalement-card')];
+        allCards.forEach(c => c.style.display = (statut==='tous' || c.dataset.statut===statut) ? '' : 'none');
+        currentPage=1; renderPage();
+    }
+
+    document.getElementById('searchInput')?.addEventListener('input', function() {
+        const val = this.value.toLowerCase();
+        allCards = [...document.querySelectorAll('.signalement-card')];
+        allCards.forEach(c => c.style.display = c.textContent.toLowerCase().includes(val) ? '' : 'none');
+        currentPage=1; renderPage();
+    });
+
+    function showToast(msg, ok=true) {
+        const t = document.getElementById('toast');
+        document.getElementById('toastMsg').textContent = msg;
+        t.style.background = ok ? '#1a2236' : '#f76f8e';
+        t.style.display = 'block';
+        setTimeout(() => t.style.display = 'none', 3500);
+    }
+
+    function ouvrirModalPhotos(id, titre) {
+        currentProblemeId = id; selectedFiles = [];
+        document.getElementById('modalPhotosTitre').textContent = titre || 'Signalement';
+        document.getElementById('photosPreviewModal').innerHTML = '';
+        document.getElementById('btnConfirmPhotos').disabled = true;
+        document.getElementById('photosInputModal').value = '';
+        document.getElementById('modalPhotos').classList.add('open');
+    }
+
+    function fermerModal() {
+        document.getElementById('modalPhotos').classList.remove('open');
+        currentProblemeId=null; selectedFiles=[];
+    }
+
+    document.getElementById('modalPhotos').addEventListener('click', e => { if (e.target===document.getElementById('modalPhotos')) fermerModal(); });
+
+    const uploadZone = document.getElementById('uploadZoneModal');
+    const photosInput = document.getElementById('photosInputModal');
+    uploadZone.addEventListener('dragover', e => { e.preventDefault(); uploadZone.classList.add('drag-over'); });
+    uploadZone.addEventListener('dragleave', () => uploadZone.classList.remove('drag-over'));
+    uploadZone.addEventListener('drop', e => { e.preventDefault(); uploadZone.classList.remove('drag-over'); addFiles([...e.dataTransfer.files]); });
+    photosInput.addEventListener('change', () => addFiles([...photosInput.files]));
+
+    function addFiles(files) {
+        files.filter(f => f.type.startsWith('image/')).forEach(f => {
+            if (!selectedFiles.find(sf => sf.name===f.name)) selectedFiles.push(f);
+        });
+        renderPreviews();
+    }
+
+    function renderPreviews() {
+        const p = document.getElementById('photosPreviewModal');
+        p.innerHTML = '';
+        selectedFiles.forEach((f, i) => {
+            const div = document.createElement('div');
+            div.className = 'photo-thumb-preview';
+            div.innerHTML = `<img src="${URL.createObjectURL(f)}"><button onclick="supprimerPhoto(${i})">×</button>`;
+            p.appendChild(div);
+        });
+        document.getElementById('btnConfirmPhotos').disabled = selectedFiles.length === 0;
+    }
+
+    function supprimerPhoto(i) { selectedFiles.splice(i,1); renderPreviews(); }
+
+    async function envoyerPhotos() {
+        if (!selectedFiles.length || !currentProblemeId) return;
+        const btn = document.getElementById('btnConfirmPhotos');
+        const orig = btn.innerHTML;
+        btn.disabled=true;
+        btn.innerHTML = `<span style="width:13px;height:13px;border:2px solid rgba(255,255,255,.4);border-top-color:#fff;border-radius:50%;display:inline-block;animation:spin .7s linear infinite;margin-right:6px;vertical-align:middle;"></span> Envoi...`;
+        const fd = new FormData();
+        selectedFiles.forEach(f => fd.append('photos', f));
+        try {
+            const res = await fetch(`/api/citoyens/problemes/${currentProblemeId}/photos`, { method:'POST', body:fd });
+            if (res.ok) {
+                btn.innerHTML = `<i class="bi bi-check2-circle"></i> Envoyées !`;
+                btn.style.background = '#38d9a9';
+                showToast('Photos ajoutées avec succès !');
+                setTimeout(() => window.location.reload(), 1200);
+            } else {
+                showToast('Erreur : ' + await res.text(), false);
+                btn.disabled=false; btn.innerHTML=orig; btn.style.background='';
+            }
+        } catch { showToast('Erreur réseau.', false); btn.disabled=false; btn.innerHTML=orig; }
+    }
+
+    function openLightbox(src) {
+        document.getElementById('lightboxImg').src = src;
+        document.getElementById('lightbox').classList.add('open');
+        event.stopPropagation();
+    }
+    function closeLightbox() { document.getElementById('lightbox').classList.remove('open'); }
+    document.addEventListener('keydown', e => { if (e.key==='Escape') { fermerModal(); closeLightbox(); } });
+</script>
+</div>
+</body>
+</html>

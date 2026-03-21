@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+
+<meta charset="UTF-8">
+<title>Connexion - ASPU</title>
+
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+
+<style>
+
+body{
+    background: linear-gradient(135deg,#2c7be5,#6ea8fe);
+    height:100vh;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    font-family:Arial, Helvetica, sans-serif;
+}
+
+.login-card{
+    width:420px;
+    background:white;
+    padding:40px;
+    border-radius:12px;
+    box-shadow:0 10px 30px rgba(0,0,0,0.2);
+}
+
+.app-title{
+    font-weight:bold;
+    color:#2c7be5;
+}
+
+.subtitle{
+    font-size:14px;
+    color:#777;
+    margin-bottom:25px;
+}
+
+.form-control{
+    padding:12px;
+}
+
+.btn-login{
+    padding:12px;
+    font-weight:bold;
+}
+
+.bottom-text{
+    font-size:14px;
+    margin-top:20px;
+}
+
+.bottom-text a{
+    text-decoration:none;
+    font-weight:bold;
+}
+
+.bottom-text a:hover{
+    text-decoration:underline;
+}
+
+.password-wrapper{
+    position:relative;
+}
+
+.show-password{
+    position:absolute;
+    right:10px;
+    top:50%;
+    transform:translateY(-50%);
+    cursor:pointer;
+    font-size:14px;
+    color:#555;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div class="login-card">
+
+<div class="text-center mb-4">
+
+<h3 class="app-title">ASPU</h3>
+
+<p class="subtitle">
+Plateforme de signalement des problèmes urbains
+</p>
+
+</div>
+
+
+<!-- message erreur -->
+<div th:if="${param.error}" class="alert alert-danger text-center">
+Email ou mot de passe incorrect
+</div>
+
+<!-- message activation -->
+<div th:if="${param.verified}" class="alert alert-success text-center">
+Votre compte a été activé. Vous pouvez maintenant vous connecter.
+</div>
+
+<!-- message logout -->
+<div th:if="${param.logout}" class="alert alert-info text-center">
+Vous êtes déconnecté.
+</div>
+
+
+<form id="loginForm" th:action="@{/login}" method="post">
+
+<div class="mb-3">
+
+<input 
+type="email"
+name="username"
+class="form-control"
+placeholder="Adresse email"
+required>
+
+</div>
+
+
+<div class="mb-3 password-wrapper">
+
+<input 
+type="password"
+id="password"
+name="password"
+class="form-control"
+placeholder="Mot de passe"
+required>
+
+<span class="show-password" onclick="togglePassword()">Afficher</span>
+
+</div>
+
+
+<button id="loginBtn" class="btn btn-primary btn-login w-100">
+
+<span id="btnText">Se connecter</span>
+
+<span id="spinner" class="spinner-border spinner-border-sm ms-2 d-none"></span>
+
+</button>
+
+</form>
+
+
+<div class="text-center bottom-text">
+
+Pas encore de compte ?  
+<a th:href="@{/register}">
+Vous pouvez vous inscrire
+</a>
+
+</div>
+
+</div>
+
+
+
+<script>
+
+function togglePassword(){
+
+const passwordField = document.getElementById("password");
+
+if(passwordField.type === "password"){
+passwordField.type = "text";
+}else{
+passwordField.type = "password";
+}
+
+}
+
+
+document.getElementById("loginForm").addEventListener("submit",function(){
+
+document.getElementById("spinner").classList.remove("d-none");
+
+document.getElementById("btnText").innerText="Connexion...";
+
+});
+
+</script>
+
+</body>
+
+</html>

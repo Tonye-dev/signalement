@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+<div th:fragment="content">
+<style>
+    :root { --accent:#4f8ef7; --accent2:#38d9a9; --accent3:#f7934f; --accent4:#f76f8e; --bg:#f0f4fb; --card-bg:#fff; --text-main:#1a2236; --text-muted:#7b8fb5; --border:#e4eaf5; }
+    .page-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:24px; flex-wrap:wrap; gap:12px; }
+    .page-header-left h2 { font-family:'Syne',sans-serif; font-size:1.3rem; font-weight:800; color:var(--text-main); margin:0; }
+    .page-header-left p { font-size:.82rem; color:var(--text-muted); margin:4px 0 0; }
+    .btn-secondary-aspu { background:var(--bg); color:var(--text-main); border:1px solid var(--border); border-radius:10px; padding:9px 18px; font-size:.83rem; font-weight:500; text-decoration:none; display:inline-flex; align-items:center; gap:7px; transition:all .18s; }
+    .btn-secondary-aspu:hover { border-color:var(--accent); color:var(--accent); }
+    .photo-card { background:var(--card-bg); border-radius:18px; border:1px solid var(--border); padding:36px 32px; max-width:480px; text-align:center; animation:slideUp .45s ease both; }
+    .current-photo { margin:0 auto 24px; position:relative; display:inline-block; }
+    .current-photo img, .current-photo .placeholder { width:120px; height:120px; border-radius:50%; }
+    .current-photo img { object-fit:cover; border:3px solid var(--border); }
+    .current-photo .placeholder { background:#dde3f0; display:flex; align-items:center; justify-content:center; font-size:2.5rem; color:var(--text-muted); }
+    .upload-zone { border:2px dashed var(--border); border-radius:14px; padding:28px; cursor:pointer; transition:all .18s; margin-bottom:20px; }
+    .upload-zone:hover,.upload-zone.drag-over { border-color:var(--accent); background:rgba(79,142,247,.03); }
+    .upload-zone i { font-size:1.8rem; color:var(--text-muted); display:block; margin-bottom:8px; }
+    .upload-zone p { font-size:.83rem; color:var(--text-muted); margin:0; }
+    .upload-zone p span { color:var(--accent); font-weight:600; }
+    #previewImg { width:120px; height:120px; border-radius:50%; object-fit:cover; border:3px solid var(--accent); display:none; margin:0 auto 16px; }
+    .btn-submit { background:var(--accent); color:#fff; border:none; border-radius:10px; padding:12px 28px; font-size:.88rem; font-weight:600; cursor:pointer; transition:background .18s,transform .18s; display:inline-flex; align-items:center; gap:8px; }
+    .btn-submit:hover { background:#3a7de8; transform:translateY(-2px); }
+    .btn-submit:disabled { opacity:.6; cursor:not-allowed; }
+    @keyframes slideUp { from{opacity:0;transform:translateY(18px)} to{opacity:1;transform:translateY(0)} }
+    @keyframes spin { to{transform:rotate(360deg);} }
+</style>
+
+<div class="page-header">
+    <div class="page-header-left">
+        <h2><i class="bi bi-camera me-2" style="color:var(--accent);"></i>Ma photo de profil</h2>
+        <p>Choisissez une photo pour personnaliser votre compte</p>
+    </div>
+    <a th:href="@{/citoyen/profil}" class="btn-secondary-aspu"><i class="bi bi-arrow-left"></i> Mon profil</a>
+</div>
+
+<div class="photo-card">
+
+    <!-- Photo actuelle -->
+    <div class="current-photo">
+        <img th:if="${currentUser?.photoPath != null}" th:src="@{${currentUser.photoPath}}" alt="Photo actuelle" id="currentImg">
+        <div class="placeholder" th:unless="${currentUser?.photoPath != null}"><i class="bi bi-person"></i></div>
+    </div>
+
+    <!-- Aperçu nouvelle photo -->
+    <img id="previewImg" alt="Aperçu">
+
+    <!-- Zone upload -->
+    <div class="upload-zone" id="uploadZone" onclick="document.getElementById('photoInput').click()">
+        <i class="bi bi-cloud-arrow-up"></i>
+        <p>Cliquez ou glissez votre photo ici</p>
+        <p style="font-size:.74rem;margin-top:5px;"><span>JPG, PNG</span> — max 2 Mo</p>
+        <input type="file" id="photoInput" accept="image/*" style="display:none;">
+    </div>
+
+    <button class="btn-submit" id="submitBtn" disabled onclick="uploadPhoto()">
+        <i class="bi bi-check2"></i> Enregistrer la photo
+        <span id="spinner" class="d-none" style="width:14px;height:14px;border:2px solid rgba(255,255,255,.4);border-top-color:#fff;border-radius:50%;display:inline-block;animation:spin .7s linear infinite;"></span>
+    </button>
+
+</div>
+
+<div id="toast" style="display:none;position:fixed;top:20px;right:20px;z-index:1000;background:#1a2236;color:#fff;padding:12px 20px;border-radius:12px;font-size:.84rem;box-shadow:0 8px 24px rgba(0,0,0,.2);"><span id="toastMsg"></span></div>
+
+<script th:inline="javascript">
+    const citoyenId = /*[[${currentUser?.id}]]*/ null;
+    let selectedFile = null;
+
+    const uploadZone = document.getElementById('uploadZone');
+    const photoInput = document.getElementById('photoInput');
+    const previewImg = document.getElementById('previewImg');
+    const submitBtn  = document.getElementById('submitBtn');
+
+    uploadZone.addEventListener('dragover', e => { e.preventDefault(); uploadZone.classList.add('drag-over'); });
+    uploadZone.addEventListener('dragleave', () => uploadZone.classList.remove('drag-over'));
+    uploadZone.addEventListener('drop', e => { e.preventDefault(); uploadZone.classList.remove('drag-over'); handleFile(e.dataTransfer.files[0]); });
+    photoInput.addEventListener('change', () => handleFile(photoInput.files[0]));
+
+    function handleFile(file) {
+        if (!file || !file.type.startsWith('image/')) return;
+        selectedFile = file;
+        previewImg.src = URL.createObjectURL(file);
+        previewImg.style.display = 'block';
+        const ci = document.getElementById('currentImg');
+        if (ci) ci.style.display = 'none';
+        submitBtn.disabled = false;
+    }
+
+    function showToast(msg, ok=true) {
+        const t = document.getElementById('toast');
+        document.getElementById('toastMsg').textContent = msg;
+        t.style.background = ok ? '#1a2236' : '#f76f8e';
+        t.style.display = 'block';
+        setTimeout(() => t.style.display = 'none', 3500);
+    }
+
+    async function uploadPhoto() {
+        if (!selectedFile || !citoyenId) return;
+        const spinner = document.getElementById('spinner');
+        submitBtn.disabled = true; spinner.classList.remove('d-none');
+        const fd = new FormData();
+        fd.append('photo', selectedFile);
+        try {
+            const res = await fetch(`/api/citoyens/utilisateurs/${citoyenId}/photo`, { method:'PUT', body:fd });
+            if (res.ok) { showToast('Photo mise à jour !'); setTimeout(() => window.location.href = '/citoyen/profil', 1500); }
+            else showToast('Erreur : ' + await res.text(), false);
+        } catch { showToast('Erreur réseau.', false); }
+        submitBtn.disabled = false; spinner.classList.add('d-none');
+    }
+</script>
+</div>
+</body>
+</html>

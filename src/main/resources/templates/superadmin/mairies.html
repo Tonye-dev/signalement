@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+<div th:fragment="content">
+<style>
+    :root { --accent:#4f8ef7; --accent2:#38d9a9; --accent3:#f7934f; --accent4:#f76f8e; --bg:#f0f4fb; --card-bg:#fff; --text-main:#1a2236; --text-muted:#7b8fb5; --border:#e4eaf5; }
+
+    .section-title { font-family:'Syne',sans-serif; font-size:.7rem; font-weight:700; letter-spacing:.12em; text-transform:uppercase; color:var(--text-muted); margin-bottom:14px; }
+
+    /* ── PAGE HEADER ── */
+    .page-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:24px; flex-wrap:wrap; gap:12px; }
+    .page-header-left h2 { font-family:'Syne',sans-serif; font-size:1.3rem; font-weight:800; color:var(--text-main); margin:0; }
+    .page-header-left p { font-size:.82rem; color:var(--text-muted); margin:4px 0 0; }
+
+    .btn-primary-aspu { background:var(--accent); color:#fff; border:none; border-radius:10px; padding:10px 20px; font-size:.84rem; font-weight:600; text-decoration:none; display:inline-flex; align-items:center; gap:7px; transition:background .18s, transform .18s; cursor:pointer; }
+    .btn-primary-aspu:hover { background:#3a7de8; color:#fff; transform:translateY(-2px); }
+
+    .btn-secondary-aspu { background:var(--bg); color:var(--text-main); border:1px solid var(--border); border-radius:10px; padding:9px 18px; font-size:.83rem; font-weight:500; text-decoration:none; display:inline-flex; align-items:center; gap:7px; transition:all .18s; cursor:pointer; }
+    .btn-secondary-aspu:hover { border-color:var(--accent); color:var(--accent); }
+
+    /* ── TABLE CARD ── */
+    .table-card { background:var(--card-bg); border-radius:18px; border:1px solid var(--border); overflow:hidden; animation:slideUp .45s ease both; }
+    .table-card:hover { box-shadow:0 8px 28px rgba(0,0,0,.06); }
+
+    .table-card-header { padding:18px 24px; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; }
+    .table-card-title { font-family:'Syne',sans-serif; font-size:.9rem; font-weight:700; color:var(--text-main); }
+
+    /* Barre de recherche */
+    .search-wrap { position:relative; }
+    .search-wrap input { background:var(--bg); border:1px solid var(--border); border-radius:8px; padding:7px 12px 7px 34px; font-size:.82rem; color:var(--text-main); outline:none; transition:border .18s; width:220px; }
+    .search-wrap input:focus { border-color:var(--accent); }
+    .search-wrap i { position:absolute; left:10px; top:50%; transform:translateY(-50%); color:var(--text-muted); font-size:.85rem; }
+
+    table { width:100%; border-collapse:collapse; }
+    thead th { padding:12px 20px; font-size:.72rem; font-weight:700; text-transform:uppercase; letter-spacing:.08em; color:var(--text-muted); background:#f8faff; border-bottom:1px solid var(--border); text-align:left; white-space:nowrap; }
+    tbody tr { border-bottom:1px solid #f5f7fc; transition:background .15s; }
+    tbody tr:last-child { border-bottom:none; }
+    tbody tr:hover { background:#f8faff; }
+    tbody td { padding:14px 20px; font-size:.84rem; color:var(--text-main); vertical-align:middle; }
+
+    .mairie-nom { font-weight:600; color:var(--text-main); }
+    .mairie-adresse { font-size:.78rem; color:var(--text-muted); margin-top:2px; }
+
+    /* Badges quartiers */
+    .quartier-badge { display:inline-block; background:rgba(79,142,247,.08); color:var(--accent); border:1px solid rgba(79,142,247,.15); border-radius:50px; padding:2px 9px; font-size:.7rem; font-weight:500; margin:2px; }
+
+    /* Actions */
+    .action-btn { background:none; border:1px solid var(--border); border-radius:7px; padding:5px 10px; font-size:.8rem; color:var(--text-muted); cursor:pointer; transition:all .15s; text-decoration:none; display:inline-flex; align-items:center; gap:5px; }
+    .action-btn:hover { border-color:var(--accent); color:var(--accent); background:rgba(79,142,247,.06); }
+    .action-btn.danger:hover { border-color:var(--accent4); color:var(--accent4); background:rgba(247,111,142,.06); }
+
+    /* Empty state */
+    .empty-state { padding:60px 24px; text-align:center; color:var(--text-muted); }
+    .empty-state i { font-size:2.5rem; opacity:.25; display:block; margin-bottom:12px; }
+    .empty-state p { font-size:.88rem; }
+
+    @keyframes slideUp { from{opacity:0;transform:translateY(18px)} to{opacity:1;transform:translateY(0)} }
+
+    @media(max-width:768px) {
+        .page-header { flex-direction:column; align-items:flex-start; }
+        .search-wrap input { width:100%; }
+        table { font-size:.78rem; }
+        thead th, tbody td { padding:10px 12px; }
+    }
+</style>
+
+<!-- PAGE HEADER -->
+<div class="page-header">
+    <div class="page-header-left">
+        <h2><i class="bi bi-building me-2" style="color:var(--accent);"></i>Gestion des Mairies</h2>
+        <p>Liste de toutes les mairies enregistrées sur la plateforme</p>
+    </div>
+    <a th:href="@{/superadmin/mairies/ajouter}" class="btn-primary-aspu">
+        <i class="bi bi-building-add"></i> Ajouter une mairie
+    </a>
+</div>
+
+<!-- TABLE CARD -->
+<div class="table-card">
+    <div class="table-card-header">
+        <span class="table-card-title">
+            <span th:text="${mairies != null ? mairies.size() : 0}">0</span> mairie(s) enregistrée(s)
+        </span>
+        <div class="search-wrap">
+            <i class="bi bi-search"></i>
+            <input type="text" id="searchInput" placeholder="Rechercher une mairie...">
+        </div>
+    </div>
+
+    <div th:if="${mairies == null or mairies.isEmpty()}" class="empty-state">
+        <i class="bi bi-building"></i>
+        <p>Aucune mairie enregistrée pour le moment.</p>
+        <a th:href="@{/superadmin/mairies/ajouter}" class="btn-primary-aspu mt-3" style="margin-top:16px;">
+            <i class="bi bi-building-add"></i> Ajouter la première mairie
+        </a>
+    </div>
+
+    <div th:unless="${mairies == null or mairies.isEmpty()}">
+        <table id="mairiesTable">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Mairie</th>
+                    <th>Zones d'intervention</th>
+                    <th>Administrateurs</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr th:each="mairie, stat : ${mairies}">
+                    <td style="color:var(--text-muted); font-size:.78rem;" th:text="${stat.index + 1}">1</td>
+                    <td>
+                        <div class="mairie-nom" th:text="${mairie.nom}">Nom mairie</div>
+                        <div class="mairie-adresse" th:text="${mairie.adresse}">Adresse</div>
+                    </td>
+                    <td>
+                        <th:block th:if="${mairie.zoneIntervention != null and !mairie.zoneIntervention.isEmpty()}">
+                            <span th:each="zone : ${mairie.zoneIntervention}" class="quartier-badge" th:text="${zone}">Zone</span>
+                        </th:block>
+                        <span th:unless="${mairie.zoneIntervention != null and !mairie.zoneIntervention.isEmpty()}"
+                              style="color:var(--text-muted); font-size:.78rem;">—</span>
+                    </td>
+                    <td>
+                        <span th:text="${mairie.administrateurs != null ? mairie.administrateurs.size() : 0}"
+                              style="font-weight:600; color:var(--accent);">0</span>
+                        <span style="color:var(--text-muted); font-size:.78rem;"> admin(s)</span>
+                    </td>
+                    <td>
+                        <div style="display:flex; gap:6px; flex-wrap:wrap;">
+                            <a th:href="@{/superadmin/mairies/{id}/modifier(id=${mairie.id})}" class="action-btn">
+                                <i class="bi bi-pencil"></i> Modifier
+                            </a>
+                            <a th:href="@{/superadmin/mairies/{id}/administrateurs/ajouter(id=${mairie.id})}" class="action-btn">
+                                <i class="bi bi-person-plus"></i> Ajouter admin
+                            </a>
+                        </div>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    // Recherche en temps réel
+    document.getElementById('searchInput')?.addEventListener('input', function() {
+        const val = this.value.toLowerCase();
+        document.querySelectorAll('#mairiesTable tbody tr').forEach(row => {
+            row.style.display = row.textContent.toLowerCase().includes(val) ? '' : 'none';
+        });
+    });
+</script>
+</div>
+</body>
+</html>

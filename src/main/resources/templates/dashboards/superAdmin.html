@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+<div th:fragment="content">
+<style>
+    :root { --accent:#4f8ef7; --accent2:#38d9a9; --accent3:#f7934f; --accent4:#f76f8e; --accent5:#a78bfa; --bg:#f0f4fb; --card-bg:#fff; --text-main:#1a2236; --text-muted:#7b8fb5; --border:#e4eaf5; }
+
+    .section-title { font-family:'Syne',sans-serif; font-size:.7rem; font-weight:700; letter-spacing:.12em; text-transform:uppercase; color:var(--text-muted); margin-bottom:14px; display:flex; align-items:center; gap:8px; margin-top:8px; }
+
+    /* Stats cards */
+    .stats-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin-bottom:24px; }
+    .stat-card { background:var(--card-bg); border-radius:18px; border:1px solid var(--border); padding:20px; display:flex; align-items:center; gap:14px; animation:slideUp .45s ease both; transition:transform .2s,box-shadow .2s; }
+    .stat-card:hover { transform:translateY(-4px); box-shadow:0 10px 28px rgba(0,0,0,.08); }
+    .stat-icon { width:48px; height:48px; border-radius:14px; display:flex; align-items:center; justify-content:center; font-size:1.2rem; flex-shrink:0; }
+    .stat-value { font-family:'Syne',sans-serif; font-size:1.8rem; font-weight:800; color:var(--text-main); line-height:1; }
+    .stat-label { font-size:.74rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:.06em; margin-top:4px; }
+
+    /* Charts */
+    .charts-grid-2 { display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:16px; }
+    .charts-grid-3 { display:grid; grid-template-columns:1fr 1fr 1fr; gap:16px; margin-bottom:16px; }
+    .chart-card { background:var(--card-bg); border-radius:18px; border:1px solid var(--border); padding:22px; animation:slideUp .45s ease both; transition:box-shadow .2s; }
+    .chart-card:hover { box-shadow:0 8px 24px rgba(0,0,0,.07); }
+    .chart-card-title { font-family:'Syne',sans-serif; font-size:.88rem; font-weight:700; color:var(--text-main); margin-bottom:16px; display:flex; align-items:center; gap:8px; }
+    .chart-card-title i { color:var(--accent); }
+    .chart-wrap { position:relative; }
+    .chart-wrap.h200 { height:200px; }
+    .chart-wrap.h240 { height:240px; }
+    .chart-wrap.h260 { height:260px; }
+
+    /* Classements podium */
+    .podium-card { background:var(--card-bg); border-radius:18px; border:1px solid var(--border); padding:22px; animation:slideUp .45s ease both; }
+    .podium-item { display:flex; align-items:center; gap:12px; padding:10px 0; border-bottom:1px solid #f5f7fc; }
+    .podium-item:last-child { border-bottom:none; }
+    .podium-rank { width:32px; height:32px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-family:'Syne',sans-serif; font-weight:800; font-size:.85rem; flex-shrink:0; }
+    .rank-1 { background:linear-gradient(135deg,#f7d94f,#f7934f); color:#fff; }
+    .rank-2 { background:linear-gradient(135deg,#c0c0c0,#a0a0a0); color:#fff; }
+    .rank-3 { background:linear-gradient(135deg,#cd7f32,#a0522d); color:#fff; }
+    .rank-n { background:var(--bg); color:var(--text-muted); }
+    .podium-name { font-weight:600; font-size:.85rem; color:var(--text-main); flex:1; }
+    .podium-value { font-family:'Syne',sans-serif; font-weight:700; font-size:.9rem; color:var(--accent); }
+    .podium-value.fast { color:var(--accent2); }
+
+    /* Table types par quartier */
+    .quartier-table { width:100%; border-collapse:collapse; font-size:.82rem; }
+    .quartier-table th { padding:9px 14px; font-size:.71rem; font-weight:700; text-transform:uppercase; letter-spacing:.07em; color:var(--text-muted); background:#f8faff; border-bottom:1px solid var(--border); text-align:left; }
+    .quartier-table td { padding:10px 14px; border-bottom:1px solid #f5f7fc; vertical-align:top; }
+    .quartier-table tr:last-child td { border-bottom:none; }
+    .type-pill { display:inline-flex; align-items:center; gap:4px; background:rgba(79,142,247,.08); color:var(--accent); border-radius:50px; padding:2px 9px; font-size:.72rem; font-weight:500; margin:2px; }
+
+    /* Export PDF */
+    .pdf-bar { display:flex; gap:10px; margin-bottom:20px; flex-wrap:wrap; }
+    .btn-pdf { background:var(--accent4); color:#fff; border:none; border-radius:10px; padding:10px 20px; font-size:.84rem; font-weight:600; cursor:pointer; display:inline-flex; align-items:center; gap:7px; transition:background .18s,transform .18s; text-decoration:none; }
+    .btn-pdf:hover { background:#e85d7e; color:#fff; transform:translateY(-2px); }
+
+    /* Résolutions par mairie par mois */
+    .mois-selector { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:14px; }
+    .mois-btn { background:var(--bg); border:1px solid var(--border); border-radius:50px; padding:4px 12px; font-size:.76rem; font-weight:600; color:var(--text-muted); cursor:pointer; transition:all .15s; }
+    .mois-btn.active { background:rgba(79,142,247,.1); border-color:rgba(79,142,247,.3); color:var(--accent); }
+
+    @keyframes slideUp { from{opacity:0;transform:translateY(18px)} to{opacity:1;transform:translateY(0)} }
+    @media(max-width:900px) { .stats-grid,.charts-grid-2,.charts-grid-3 { grid-template-columns:1fr 1fr; } }
+    @media(max-width:600px) { .stats-grid,.charts-grid-2,.charts-grid-3 { grid-template-columns:1fr; } }
+</style>
+
+<!-- ── EXPORT PDF ── -->
+<div class="pdf-bar">
+    <a th:href="@{/api/pdf/superadmin/rapport-global}" class="btn-pdf" target="_blank">
+        <i class="bi bi-file-earmark-arrow-down"></i> Rapport global PDF
+    </a>
+    <a th:href="@{/api/pdf/superadmin/classements}" class="btn-pdf" style="background:var(--text-main);" target="_blank">
+        <i class="bi bi-trophy"></i> Classements PDF
+    </a>
+</div>
+
+<!-- ── STATS GLOBALES ── -->
+<div class="section-title"><i class="bi bi-bar-chart-line"></i> Vue d'ensemble globale</div>
+<div class="stats-grid">
+    <div class="stat-card" style="animation-delay:.04s">
+        <div class="stat-icon" style="background:rgba(79,142,247,.1);color:var(--accent);"><i class="bi bi-building"></i></div>
+        <div><div class="stat-value" th:text="${dashboard.totalMairies}">0</div><div class="stat-label">Mairies</div></div>
+    </div>
+    <div class="stat-card" style="animation-delay:.08s">
+        <div class="stat-icon" style="background:rgba(56,217,169,.1);color:var(--accent2);"><i class="bi bi-people"></i></div>
+        <div><div class="stat-value" th:text="${dashboard.totalUtilisateurs}">0</div><div class="stat-label">Utilisateurs</div></div>
+    </div>
+    <div class="stat-card" style="animation-delay:.12s">
+        <div class="stat-icon" style="background:rgba(247,147,79,.1);color:var(--accent3);"><i class="bi bi-exclamation-triangle"></i></div>
+        <div><div class="stat-value" th:text="${dashboard.totalProblemes}">0</div><div class="stat-label">Signalements</div></div>
+    </div>
+    <div class="stat-card" style="animation-delay:.16s">
+        <div class="stat-icon" style="background:rgba(167,139,250,.1);color:var(--accent5);"><i class="bi bi-check2-all"></i></div>
+        <div><div class="stat-value" th:text="${dashboard.problemesResolus}">0</div><div class="stat-label">Résolus</div></div>
+    </div>
+</div>
+
+<!-- ── CLASSEMENTS MAIRIES ── -->
+<div class="section-title"><i class="bi bi-trophy"></i> Classements des mairies</div>
+<div class="charts-grid-3">
+
+    <!-- Classement par résolutions -->
+    <div class="podium-card" style="animation-delay:.1s">
+        <div class="chart-card-title"><i class="bi bi-award" style="color:var(--accent3);"></i> Mairies les plus actives</div>
+        <div th:if="${dashboard.classementResolutions == null or dashboard.classementResolutions.isEmpty()}"
+             style="color:var(--text-muted);font-size:.82rem;text-align:center;padding:20px;">Aucune donnée</div>
+        <div th:each="entry, stat : ${dashboard.classementResolutions}" th:if="${stat.index < 5}" class="podium-item">
+            <div class="podium-rank"
+                 th:classappend="${stat.index == 0 ? 'rank-1' : stat.index == 1 ? 'rank-2' : stat.index == 2 ? 'rank-3' : 'rank-n'}"
+                 th:text="${stat.index + 1}">1</div>
+            <div class="podium-name" th:text="${entry.key}">Mairie</div>
+            <div class="podium-value" th:text="${entry.value} + ' résolus'">0</div>
+        </div>
+    </div>
+
+    <!-- Classement par rapidité -->
+    <div class="podium-card" style="animation-delay:.15s">
+        <div class="chart-card-title"><i class="bi bi-lightning-charge" style="color:var(--accent2);"></i> Mairies les plus rapides</div>
+        <div th:if="${dashboard.classementRapidite == null or dashboard.classementRapidite.isEmpty()}"
+             style="color:var(--text-muted);font-size:.82rem;text-align:center;padding:20px;">Aucune donnée</div>
+        <div th:each="entry, stat : ${dashboard.classementRapidite}" th:if="${stat.index < 5}" class="podium-item">
+            <div class="podium-rank"
+                 th:classappend="${stat.index == 0 ? 'rank-1' : stat.index == 1 ? 'rank-2' : stat.index == 2 ? 'rank-3' : 'rank-n'}"
+                 th:text="${stat.index + 1}">1</div>
+            <div class="podium-name" th:text="${entry.key}">Mairie</div>
+            <div class="podium-value fast"
+                 th:text="${entry.value < 24 ? #numbers.formatDecimal(entry.value, 1, 0) + 'h' : #numbers.formatDecimal(entry.value / 24, 1, 1) + 'j'}">—</div>
+        </div>
+    </div>
+
+    <!-- Graphique résolutions par mairie -->
+    <div class="chart-card" style="animation-delay:.2s">
+        <div class="chart-card-title"><i class="bi bi-bar-chart"></i> Résolutions par mairie</div>
+        <div class="chart-wrap h200"><canvas id="chartResolusParMairie"></canvas></div>
+    </div>
+
+</div>
+
+<!-- ── RÉSOLUTIONS PAR MOIS ── -->
+<div class="section-title"><i class="bi bi-calendar3"></i> Résolutions par mairie par mois</div>
+<div class="chart-card" style="animation-delay:.25s; margin-bottom:16px;">
+    <div class="chart-card-title"><i class="bi bi-graph-up"></i> Évolution mensuelle par mairie</div>
+    <div class="mois-selector" id="moisSelector"></div>
+    <div class="chart-wrap h260"><canvas id="chartMaisParMois"></canvas></div>
+</div>
+
+<!-- ── TEMPS RÉSOLUTION PAR TYPE ── -->
+<div class="section-title"><i class="bi bi-stopwatch"></i> Temps de résolution par type de problème</div>
+<div class="charts-grid-2">
+    <div class="chart-card" style="animation-delay:.3s">
+        <div class="chart-card-title"><i class="bi bi-bar-chart-steps"></i> Temps moyen (global)</div>
+        <div class="chart-wrap h240"><canvas id="chartTempsType"></canvas></div>
+    </div>
+    <div class="chart-card" style="animation-delay:.35s">
+        <div class="chart-card-title"><i class="bi bi-tags"></i> Types les plus fréquents</div>
+        <div class="chart-wrap h240"><canvas id="chartTypesFréquents"></canvas></div>
+    </div>
+</div>
+
+<!-- ── TYPES PAR QUARTIER GLOBAL ── -->
+<div class="section-title"><i class="bi bi-pin-map"></i> Types de problèmes par quartier (toutes mairies)</div>
+<div class="chart-card" style="animation-delay:.4s; overflow-x:auto; margin-bottom:16px;">
+    <div th:if="${dashboard.typesParQuartierGlobal == null or dashboard.typesParQuartierGlobal.isEmpty()}"
+         style="text-align:center;color:var(--text-muted);padding:30px;font-size:.84rem;">Aucune donnée disponible</div>
+    <table class="quartier-table" th:unless="${dashboard.typesParQuartierGlobal == null or dashboard.typesParQuartierGlobal.isEmpty()}">
+        <thead>
+            <tr><th>Quartier</th><th>Types de problèmes (occurrences)</th></tr>
+        </thead>
+        <tbody>
+            <tr th:each="entry : ${dashboard.typesParQuartierGlobal}">
+                <td style="font-weight:600;" th:text="${entry.key}">Quartier</td>
+                <td>
+                    <span th:each="typeEntry : ${entry.value}" class="type-pill">
+                        <span th:text="${typeEntry.key}">Type</span>
+                        <span style="font-weight:700;" th:text="'(' + ${typeEntry.value} + ')'">0</span>
+                    </span>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+<script th:inline="javascript">
+    const resolusParMairie       = /*[[${dashboard.resolusParMairie}]]*/ {};
+    const resolutionsParMoisRaw  = /*[[${dashboard.resolutionsParMairieParMois}]]*/ {};
+    const tempsMoyenParType      = /*[[${dashboard.tempsMoyenParTypeGlobal}]]*/ {};
+    const repartitionParType     = /*[[${dashboard.repartitionParTypeProbleme}]]*/ {};
+
+    const PALETTE = ['#4f8ef7','#38d9a9','#f7934f','#f76f8e','#a78bfa','#f7d94f','#4fffff','#ff6b6b'];
+
+    // ── Résolutions par mairie (bar horizontal) ──
+    if (Object.keys(resolusParMairie).length > 0) {
+        new Chart(document.getElementById('chartResolusParMairie'), {
+            type: 'bar',
+            data: {
+                labels: Object.keys(resolusParMairie),
+                datasets: [{ data: Object.values(resolusParMairie), backgroundColor: PALETTE, borderRadius: 7 }]
+            },
+            options: {
+                responsive: true, maintainAspectRatio: false,
+                indexAxis: 'y',
+                plugins: { legend: { display: false } },
+                scales: { x: { beginAtZero: true, grid: { color: 'rgba(0,0,0,.04)' }, ticks: { font: { size: 10 } } }, y: { grid: { display: false }, ticks: { font: { size: 10 } } } }
+            }
+        });
+    }
+
+    // ── Résolutions par mairie par mois ──
+    const allMois   = Object.keys(resolutionsParMoisRaw).sort();
+    const allMairie = [...new Set(allMois.flatMap(m => Object.keys(resolutionsParMoisRaw[m] || {})))];
+    let moisChartInstance = null;
+
+    function buildMoisSelector() {
+        const sel = document.getElementById('moisSelector');
+        sel.innerHTML = '';
+        allMois.forEach((m, i) => {
+            const btn = document.createElement('span');
+            btn.className = 'mois-btn' + (i === 0 ? ' active' : '');
+            btn.textContent = m;
+            btn.onclick = () => {
+                document.querySelectorAll('.mois-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                updateMoisChart(m);
+            };
+            sel.appendChild(btn);
+        });
+        if (allMois.length > 0) updateMoisChart(allMois[0]);
+    }
+
+    function updateMoisChart(mois) {
+        const data = resolutionsParMoisRaw[mois] || {};
+        const labels = Object.keys(data);
+        const vals   = Object.values(data);
+        const ctx = document.getElementById('chartMaisParMois');
+        if (moisChartInstance) moisChartInstance.destroy();
+        moisChartInstance = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels,
+                datasets: [{ label: mois, data: vals, backgroundColor: labels.map((_,i) => PALETTE[i%PALETTE.length]), borderRadius: 8 }]
+            },
+            options: {
+                responsive: true, maintainAspectRatio: false,
+                plugins: { legend: { display: false }, title: { display: true, text: `Résolutions - ${mois}`, font: { size: 12 } } },
+                scales: { y: { beginAtZero: true, grid: { color: 'rgba(0,0,0,.04)' }, ticks: { font: { size: 10 } } }, x: { grid: { display: false }, ticks: { font: { size: 10 } } } }
+            }
+        });
+    }
+
+    buildMoisSelector();
+
+    // ── Temps moyen par type ──
+    if (Object.keys(tempsMoyenParType).length > 0) {
+        const labels = Object.keys(tempsMoyenParType);
+        const vals   = Object.values(tempsMoyenParType).map(h => +(h < 24 ? h : h/24).toFixed(1));
+        const unite  = Object.values(tempsMoyenParType).some(h => h >= 24) ? 'jours' : 'heures';
+        new Chart(document.getElementById('chartTempsType'), {
+            type: 'bar',
+            data: { labels, datasets: [{ data: vals, backgroundColor: 'rgba(56,217,169,.7)', borderColor: '#38d9a9', borderWidth: 2, borderRadius: 7 }] },
+            options: {
+                responsive: true, maintainAspectRatio: false,
+                plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => ` ${c.raw} ${unite}` } } },
+                scales: { y: { beginAtZero: true, grid: { color: 'rgba(0,0,0,.04)' }, ticks: { font: { size: 10 }, callback: v => v + ' ' + unite } }, x: { grid: { display: false }, ticks: { font: { size: 10 } } } }
+            }
+        });
+    }
+
+    // ── Types fréquents (donut) ──
+    if (Object.keys(repartitionParType).length > 0) {
+        new Chart(document.getElementById('chartTypesFréquents'), {
+            type: 'doughnut',
+            data: { labels: Object.keys(repartitionParType), datasets: [{ data: Object.values(repartitionParType), backgroundColor: PALETTE, borderWidth: 2, borderColor: '#fff' }] },
+            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { font: { size: 10 }, padding: 10 } } } }
+        });
+    }
+</script>
+</div>
+</body>
+</html>

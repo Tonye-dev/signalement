@@ -1,0 +1,1241 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ASPU — Signalement des Problèmes Urbains</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,400&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+
+    <style>
+    /* ═══════════════════════════════════════
+       RESET & BASE
+    ═══════════════════════════════════════ */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+        --dark:    #0d1117;
+        --dark2:   #161b27;
+        --dark3:   #1e2a3a;
+        --accent:  #4f8ef7;
+        --accent2: #38d9a9;
+        --accent3: #f7934f;
+        --accent4: #f76f8e;
+        --light-bg: #f0f4fb;
+        --card-bg:  #ffffff;
+        --text:     #1a2236;
+        --muted:    #7b8fb5;
+        --border:   #e4eaf5;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+        font-family: 'DM Sans', sans-serif;
+        background: var(--dark);
+        color: #fff;
+        overflow-x: hidden;
+    }
+
+    /* ═══════════════════════════════════════
+       NAVBAR
+    ═══════════════════════════════════════ */
+    .navbar {
+        position: fixed;
+        top: 0; left: 0; right: 0;
+        z-index: 1000;
+        padding: 18px 48px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        transition: background .35s, backdrop-filter .35s, padding .35s, box-shadow .35s;
+    }
+
+    .navbar.scrolled {
+        background: rgba(13,17,23,.92);
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+        padding: 12px 48px;
+        box-shadow: 0 4px 30px rgba(0,0,0,.4);
+    }
+
+    .nav-logo {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        text-decoration: none;
+    }
+
+    .nav-logo-icon {
+        width: 34px; height: 34px;
+        background: linear-gradient(135deg, var(--accent), var(--accent2));
+        border-radius: 9px;
+        display: flex; align-items: center; justify-content: center;
+        font-family: 'Syne', sans-serif;
+        font-weight: 800;
+        font-size: .85rem;
+        color: #fff;
+    }
+
+    .nav-logo-text {
+        font-family: 'Syne', sans-serif;
+        font-weight: 800;
+        font-size: 1.05rem;
+        color: #fff;
+        letter-spacing: .04em;
+    }
+
+    .nav-links {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        list-style: none;
+    }
+
+    .nav-links a {
+        color: rgba(255,255,255,.6);
+        text-decoration: none;
+        font-size: .86rem;
+        font-weight: 500;
+        padding: 7px 14px;
+        border-radius: 8px;
+        transition: color .18s, background .18s;
+    }
+
+    .nav-links a:hover { color: #fff; background: rgba(255,255,255,.07); }
+
+    .nav-cta {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .btn-nav-login {
+        color: rgba(255,255,255,.75);
+        text-decoration: none;
+        font-size: .85rem;
+        font-weight: 500;
+        padding: 8px 18px;
+        border-radius: 9px;
+        border: 1px solid rgba(255,255,255,.15);
+        transition: all .18s;
+    }
+
+    .btn-nav-login:hover { color: #fff; border-color: rgba(255,255,255,.35); background: rgba(255,255,255,.06); }
+
+    .btn-nav-register {
+        background: var(--accent);
+        color: #fff;
+        text-decoration: none;
+        font-size: .85rem;
+        font-weight: 600;
+        padding: 8px 20px;
+        border-radius: 9px;
+        transition: background .18s, transform .18s, box-shadow .18s;
+    }
+
+    .btn-nav-register:hover {
+        background: #3a7de8;
+        color: #fff;
+        transform: translateY(-1px);
+        box-shadow: 0 6px 16px rgba(79,142,247,.4);
+    }
+
+    /* Mobile nav toggle */
+    .nav-toggle {
+        display: none;
+        background: none;
+        border: none;
+        color: #fff;
+        font-size: 1.4rem;
+        cursor: pointer;
+    }
+
+    /* ═══════════════════════════════════════
+       HERO
+    ═══════════════════════════════════════ */
+    .hero {
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        padding: 120px 24px 80px;
+        position: relative;
+        overflow: hidden;
+    }
+
+    /* Mesh gradient background */
+    .hero-bg {
+        position: absolute;
+        inset: 0;
+        z-index: 0;
+    }
+
+    .hero-bg::before {
+        content: '';
+        position: absolute;
+        top: -120px; left: -120px;
+        width: 600px; height: 600px;
+        background: radial-gradient(circle, rgba(79,142,247,.18) 0%, transparent 70%);
+        animation: floatBlob1 8s ease-in-out infinite;
+    }
+
+    .hero-bg::after {
+        content: '';
+        position: absolute;
+        bottom: -80px; right: -80px;
+        width: 500px; height: 500px;
+        background: radial-gradient(circle, rgba(56,217,169,.13) 0%, transparent 70%);
+        animation: floatBlob2 10s ease-in-out infinite;
+    }
+
+    .hero-blob3 {
+        position: absolute;
+        top: 40%; left: 60%;
+        width: 350px; height: 350px;
+        background: radial-gradient(circle, rgba(247,111,142,.08) 0%, transparent 70%);
+        animation: floatBlob3 12s ease-in-out infinite;
+        pointer-events: none;
+    }
+
+    /* Grid overlay */
+    .hero-grid {
+        position: absolute;
+        inset: 0;
+        background-image:
+            linear-gradient(rgba(79,142,247,.04) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(79,142,247,.04) 1px, transparent 1px);
+        background-size: 60px 60px;
+        z-index: 0;
+    }
+
+    @keyframes floatBlob1 {
+        0%, 100% { transform: translate(0, 0) scale(1); }
+        33%       { transform: translate(60px, -40px) scale(1.1); }
+        66%       { transform: translate(-30px, 50px) scale(.95); }
+    }
+    @keyframes floatBlob2 {
+        0%, 100% { transform: translate(0, 0) scale(1); }
+        50%       { transform: translate(-50px, -60px) scale(1.08); }
+    }
+    @keyframes floatBlob3 {
+        0%, 100% { transform: translate(0, 0); }
+        40%       { transform: translate(40px, -30px); }
+        80%       { transform: translate(-20px, 20px); }
+    }
+
+    .hero-content {
+        position: relative;
+        z-index: 1;
+        max-width: 780px;
+    }
+
+    .hero-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        background: rgba(79,142,247,.12);
+        border: 1px solid rgba(79,142,247,.25);
+        border-radius: 50px;
+        padding: 6px 16px;
+        font-size: .78rem;
+        font-weight: 500;
+        color: var(--accent);
+        margin-bottom: 28px;
+        animation: fadeDown .7s ease both;
+    }
+
+    .hero-badge-dot {
+        width: 7px; height: 7px;
+        background: var(--accent);
+        border-radius: 50%;
+        animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+        0%, 100% { box-shadow: 0 0 0 0 rgba(79,142,247,.6); }
+        50%       { box-shadow: 0 0 0 5px rgba(79,142,247,0); }
+    }
+
+    .hero h1 {
+        font-family: 'Syne', sans-serif;
+        font-size: clamp(2.4rem, 6vw, 4rem);
+        font-weight: 800;
+        line-height: 1.1;
+        margin-bottom: 22px;
+        animation: fadeDown .7s ease .1s both;
+    }
+
+    .hero h1 .highlight {
+        background: linear-gradient(90deg, var(--accent), var(--accent2));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+
+    .hero p {
+        font-size: 1.05rem;
+        color: rgba(255,255,255,.55);
+        max-width: 580px;
+        margin: 0 auto 40px;
+        line-height: 1.7;
+        animation: fadeDown .7s ease .2s both;
+    }
+
+    .hero-btns {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 14px;
+        flex-wrap: wrap;
+        animation: fadeDown .7s ease .3s both;
+    }
+
+    .btn-hero-primary {
+        background: var(--accent);
+        color: #fff;
+        text-decoration: none;
+        font-weight: 600;
+        font-size: .95rem;
+        padding: 14px 32px;
+        border-radius: 12px;
+        display: inline-flex;
+        align-items: center;
+        gap: 9px;
+        transition: background .2s, transform .2s, box-shadow .2s;
+    }
+
+    .btn-hero-primary:hover {
+        background: #3a7de8;
+        color: #fff;
+        transform: translateY(-3px);
+        box-shadow: 0 14px 30px rgba(79,142,247,.4);
+    }
+
+    .btn-hero-secondary {
+        background: rgba(255,255,255,.06);
+        color: rgba(255,255,255,.8);
+        text-decoration: none;
+        font-weight: 500;
+        font-size: .95rem;
+        padding: 14px 32px;
+        border-radius: 12px;
+        border: 1px solid rgba(255,255,255,.12);
+        display: inline-flex;
+        align-items: center;
+        gap: 9px;
+        transition: all .2s;
+    }
+
+    .btn-hero-secondary:hover {
+        background: rgba(255,255,255,.1);
+        color: #fff;
+        border-color: rgba(255,255,255,.25);
+        transform: translateY(-2px);
+    }
+
+    /* Stats row */
+    .hero-stats {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 40px;
+        margin-top: 60px;
+        animation: fadeDown .7s ease .4s both;
+        flex-wrap: wrap;
+    }
+
+    .hero-stat {
+        text-align: center;
+    }
+
+    .hero-stat-value {
+        font-family: 'Syne', sans-serif;
+        font-size: 1.8rem;
+        font-weight: 800;
+        color: #fff;
+        line-height: 1;
+    }
+
+    .hero-stat-label {
+        font-size: .75rem;
+        color: rgba(255,255,255,.4);
+        margin-top: 5px;
+        text-transform: uppercase;
+        letter-spacing: .08em;
+    }
+
+    .hero-stat-divider {
+        width: 1px;
+        height: 36px;
+        background: rgba(255,255,255,.1);
+    }
+
+    /* Scroll indicator */
+    .scroll-indicator {
+        position: absolute;
+        bottom: 32px;
+        left: 50%;
+        transform: translateX(-50%);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 6px;
+        color: rgba(255,255,255,.3);
+        font-size: .72rem;
+        letter-spacing: .1em;
+        text-transform: uppercase;
+        animation: fadeDown .7s ease .6s both;
+        z-index: 1;
+    }
+
+    .scroll-mouse {
+        width: 22px; height: 34px;
+        border: 2px solid rgba(255,255,255,.2);
+        border-radius: 11px;
+        position: relative;
+    }
+
+    .scroll-wheel {
+        width: 3px; height: 6px;
+        background: rgba(255,255,255,.4);
+        border-radius: 2px;
+        position: absolute;
+        top: 5px; left: 50%;
+        transform: translateX(-50%);
+        animation: scrollWheel 1.8s ease infinite;
+    }
+
+    @keyframes scrollWheel {
+        0%   { opacity: 1; transform: translateX(-50%) translateY(0); }
+        100% { opacity: 0; transform: translateX(-50%) translateY(10px); }
+    }
+
+    /* ═══════════════════════════════════════
+       HOW IT WORKS
+    ═══════════════════════════════════════ */
+    .section-how {
+        background: var(--dark2);
+        padding: 100px 24px;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .section-how::before {
+        content: '';
+        position: absolute;
+        top: 0; left: 0; right: 0;
+        height: 1px;
+        background: linear-gradient(90deg, transparent, rgba(79,142,247,.3), transparent);
+    }
+
+    .section-label {
+        text-align: center;
+        font-size: .72rem;
+        font-weight: 700;
+        letter-spacing: .14em;
+        text-transform: uppercase;
+        color: var(--accent);
+        margin-bottom: 12px;
+    }
+
+    .section-title {
+        font-family: 'Syne', sans-serif;
+        font-size: clamp(1.6rem, 4vw, 2.4rem);
+        font-weight: 800;
+        text-align: center;
+        color: #fff;
+        margin-bottom: 14px;
+    }
+
+    .section-sub {
+        text-align: center;
+        color: rgba(255,255,255,.45);
+        font-size: .95rem;
+        max-width: 520px;
+        margin: 0 auto 60px;
+        line-height: 1.65;
+    }
+
+    .steps-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 24px;
+        max-width: 960px;
+        margin: 0 auto;
+        position: relative;
+    }
+
+    /* Ligne de connexion entre les steps */
+    .steps-grid::before {
+        content: '';
+        position: absolute;
+        top: 36px; left: calc(16.6% + 36px); right: calc(16.6% + 36px);
+        height: 2px;
+        background: linear-gradient(90deg, var(--accent), var(--accent2));
+        opacity: .25;
+        z-index: 0;
+    }
+
+    .step-card {
+        background: rgba(255,255,255,.04);
+        border: 1px solid rgba(255,255,255,.08);
+        border-radius: 20px;
+        padding: 36px 28px 32px;
+        text-align: center;
+        position: relative;
+        z-index: 1;
+        transition: background .25s, border-color .25s, transform .25s;
+        opacity: 0;
+        transform: translateY(30px);
+    }
+
+    .step-card.reveal {
+        animation: revealUp .6s ease forwards;
+    }
+
+    .step-card:hover {
+        background: rgba(255,255,255,.07);
+        border-color: rgba(79,142,247,.3);
+        transform: translateY(-6px);
+    }
+
+    @keyframes revealUp {
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    .step-number {
+        width: 52px; height: 52px;
+        border-radius: 50%;
+        display: flex; align-items: center; justify-content: center;
+        font-family: 'Syne', sans-serif;
+        font-weight: 800;
+        font-size: 1.1rem;
+        margin: 0 auto 20px;
+        position: relative;
+    }
+
+    .step-card:nth-child(1) .step-number { background: rgba(79,142,247,.15); color: var(--accent); border: 2px solid rgba(79,142,247,.3); }
+    .step-card:nth-child(2) .step-number { background: rgba(56,217,169,.15); color: var(--accent2); border: 2px solid rgba(56,217,169,.3); }
+    .step-card:nth-child(3) .step-number { background: rgba(247,147,79,.15); color: var(--accent3); border: 2px solid rgba(247,147,79,.3); }
+
+    .step-icon {
+        font-size: 1.6rem;
+        margin-bottom: 14px;
+        display: block;
+    }
+
+    .step-card:nth-child(1) .step-icon { color: var(--accent); }
+    .step-card:nth-child(2) .step-icon { color: var(--accent2); }
+    .step-card:nth-child(3) .step-icon { color: var(--accent3); }
+
+    .step-title {
+        font-family: 'Syne', sans-serif;
+        font-size: 1.05rem;
+        font-weight: 700;
+        color: #fff;
+        margin-bottom: 10px;
+    }
+
+    .step-desc {
+        font-size: .85rem;
+        color: rgba(255,255,255,.45);
+        line-height: 1.65;
+    }
+
+    /* ═══════════════════════════════════════
+       FEATURES
+    ═══════════════════════════════════════ */
+    .section-features {
+        background: var(--dark);
+        padding: 100px 24px;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .section-features::before {
+        content: '';
+        position: absolute;
+        top: 0; left: 0; right: 0;
+        height: 1px;
+        background: linear-gradient(90deg, transparent, rgba(56,217,169,.25), transparent);
+    }
+
+    .features-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 20px;
+        max-width: 1060px;
+        margin: 0 auto;
+    }
+
+    .feature-card {
+        background: rgba(255,255,255,.03);
+        border: 1px solid rgba(255,255,255,.07);
+        border-radius: 18px;
+        padding: 30px 26px;
+        transition: all .25s;
+        opacity: 0;
+        transform: translateY(24px);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .feature-card::before {
+        content: '';
+        position: absolute;
+        top: 0; left: 0; right: 0;
+        height: 2px;
+        border-radius: 18px 18px 0 0;
+        opacity: 0;
+        transition: opacity .25s;
+    }
+
+    .feature-card:hover::before { opacity: 1; }
+
+    .feature-card:nth-child(1)::before { background: var(--accent); }
+    .feature-card:nth-child(2)::before { background: var(--accent2); }
+    .feature-card:nth-child(3)::before { background: var(--accent3); }
+    .feature-card:nth-child(4)::before { background: var(--accent4); }
+    .feature-card:nth-child(5)::before { background: #a78bfa; }
+    .feature-card:nth-child(6)::before { background: #06b6d4; }
+
+    .feature-card.reveal { animation: revealUp .55s ease forwards; }
+
+    .feature-card:hover {
+        background: rgba(255,255,255,.06);
+        border-color: rgba(255,255,255,.14);
+        transform: translateY(-5px);
+        box-shadow: 0 20px 40px rgba(0,0,0,.3);
+    }
+
+    .feature-icon-wrap {
+        width: 46px; height: 46px;
+        border-radius: 12px;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 1.15rem;
+        margin-bottom: 18px;
+    }
+
+    .feature-card:nth-child(1) .feature-icon-wrap { background: rgba(79,142,247,.12);  color: var(--accent); }
+    .feature-card:nth-child(2) .feature-icon-wrap { background: rgba(56,217,169,.12);  color: var(--accent2); }
+    .feature-card:nth-child(3) .feature-icon-wrap { background: rgba(247,147,79,.12);  color: var(--accent3); }
+    .feature-card:nth-child(4) .feature-icon-wrap { background: rgba(247,111,142,.12); color: var(--accent4); }
+    .feature-card:nth-child(5) .feature-icon-wrap { background: rgba(167,139,250,.12); color: #a78bfa; }
+    .feature-card:nth-child(6) .feature-icon-wrap { background: rgba(6,182,212,.12);   color: #06b6d4; }
+
+    .feature-title {
+        font-family: 'Syne', sans-serif;
+        font-size: .95rem;
+        font-weight: 700;
+        color: #fff;
+        margin-bottom: 8px;
+    }
+
+    .feature-desc {
+        font-size: .83rem;
+        color: rgba(255,255,255,.42);
+        line-height: 1.65;
+    }
+
+    /* ═══════════════════════════════════════
+       ROLES SECTION
+    ═══════════════════════════════════════ */
+    .section-roles {
+        background: var(--dark2);
+        padding: 100px 24px;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .section-roles::before {
+        content: '';
+        position: absolute;
+        top: 0; left: 0; right: 0;
+        height: 1px;
+        background: linear-gradient(90deg, transparent, rgba(247,111,142,.25), transparent);
+    }
+
+    .roles-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 22px;
+        max-width: 900px;
+        margin: 0 auto;
+    }
+
+    .role-card {
+        border-radius: 20px;
+        padding: 36px 28px;
+        text-align: center;
+        opacity: 0;
+        transform: translateY(24px);
+        transition: transform .25s, box-shadow .25s;
+        cursor: default;
+    }
+
+    .role-card.reveal { animation: revealUp .6s ease forwards; }
+
+    .role-card:hover {
+        transform: translateY(-6px);
+        box-shadow: 0 24px 48px rgba(0,0,0,.35);
+    }
+
+    .role-card.citizen {
+        background: linear-gradient(135deg, rgba(56,217,169,.1), rgba(79,142,247,.1));
+        border: 1px solid rgba(56,217,169,.2);
+    }
+
+    .role-card.admin {
+        background: linear-gradient(135deg, rgba(247,147,79,.1), rgba(247,111,142,.1));
+        border: 1px solid rgba(247,147,79,.2);
+    }
+
+    .role-card.superadmin {
+        background: linear-gradient(135deg, rgba(167,139,250,.1), rgba(79,142,247,.1));
+        border: 1px solid rgba(167,139,250,.2);
+    }
+
+    .role-icon {
+        width: 60px; height: 60px;
+        border-radius: 16px;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 1.5rem;
+        margin: 0 auto 20px;
+    }
+
+    .citizen   .role-icon { background: rgba(56,217,169,.15); color: var(--accent2); }
+    .admin     .role-icon { background: rgba(247,147,79,.15); color: var(--accent3); }
+    .superadmin .role-icon { background: rgba(167,139,250,.15); color: #a78bfa; }
+
+    .role-name {
+        font-family: 'Syne', sans-serif;
+        font-size: 1rem;
+        font-weight: 700;
+        color: #fff;
+        margin-bottom: 8px;
+    }
+
+    .role-badge {
+        display: inline-block;
+        font-size: .68rem;
+        font-weight: 600;
+        padding: 3px 10px;
+        border-radius: 50px;
+        margin-bottom: 14px;
+        letter-spacing: .06em;
+    }
+
+    .citizen    .role-badge { background: rgba(56,217,169,.15); color: var(--accent2); }
+    .admin      .role-badge { background: rgba(247,147,79,.15); color: var(--accent3); }
+    .superadmin .role-badge { background: rgba(167,139,250,.15); color: #a78bfa; }
+
+    .role-desc {
+        font-size: .83rem;
+        color: rgba(255,255,255,.42);
+        line-height: 1.65;
+    }
+
+    /* ═══════════════════════════════════════
+       CTA SECTION
+    ═══════════════════════════════════════ */
+    .section-cta {
+        background: var(--dark);
+        padding: 100px 24px;
+        text-align: center;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .section-cta::before {
+        content: '';
+        position: absolute;
+        top: 0; left: 0; right: 0;
+        height: 1px;
+        background: linear-gradient(90deg, transparent, rgba(79,142,247,.25), transparent);
+    }
+
+    .cta-glow {
+        position: absolute;
+        top: 50%; left: 50%;
+        transform: translate(-50%, -50%);
+        width: 600px; height: 300px;
+        background: radial-gradient(ellipse, rgba(79,142,247,.1) 0%, transparent 70%);
+        pointer-events: none;
+    }
+
+    .cta-card {
+        background: rgba(255,255,255,.04);
+        border: 1px solid rgba(255,255,255,.09);
+        border-radius: 28px;
+        padding: 64px 48px;
+        max-width: 680px;
+        margin: 0 auto;
+        position: relative;
+        z-index: 1;
+        opacity: 0;
+        transform: translateY(24px);
+    }
+
+    .cta-card.reveal { animation: revealUp .6s ease forwards; }
+
+    .cta-card h2 {
+        font-family: 'Syne', sans-serif;
+        font-size: clamp(1.6rem, 4vw, 2.2rem);
+        font-weight: 800;
+        color: #fff;
+        margin-bottom: 14px;
+    }
+
+    .cta-card p {
+        color: rgba(255,255,255,.45);
+        font-size: .95rem;
+        margin-bottom: 36px;
+        line-height: 1.65;
+    }
+
+    .cta-btns {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 14px;
+        flex-wrap: wrap;
+    }
+
+    /* ═══════════════════════════════════════
+       FOOTER
+    ═══════════════════════════════════════ */
+    .footer {
+        background: var(--dark2);
+        border-top: 1px solid rgba(255,255,255,.06);
+        padding: 32px 48px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 16px;
+    }
+
+    .footer-logo {
+        display: flex;
+        align-items: center;
+        gap: 9px;
+        text-decoration: none;
+    }
+
+    .footer-logo-icon {
+        width: 28px; height: 28px;
+        background: linear-gradient(135deg, var(--accent), var(--accent2));
+        border-radius: 7px;
+        display: flex; align-items: center; justify-content: center;
+        font-family: 'Syne', sans-serif;
+        font-weight: 800;
+        font-size: .72rem;
+        color: #fff;
+    }
+
+    .footer-logo-text {
+        font-family: 'Syne', sans-serif;
+        font-weight: 700;
+        font-size: .9rem;
+        color: rgba(255,255,255,.6);
+    }
+
+    .footer-copy {
+        font-size: .75rem;
+        color: rgba(255,255,255,.25);
+    }
+
+    .footer-links {
+        display: flex;
+        gap: 20px;
+        list-style: none;
+    }
+
+    .footer-links a {
+        font-size: .78rem;
+        color: rgba(255,255,255,.3);
+        text-decoration: none;
+        transition: color .18s;
+    }
+
+    .footer-links a:hover { color: rgba(255,255,255,.7); }
+
+    /* ═══════════════════════════════════════
+       ANIMATIONS GLOBALES
+    ═══════════════════════════════════════ */
+    @keyframes fadeDown {
+        from { opacity: 0; transform: translateY(-18px); }
+        to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ═══════════════════════════════════════
+       RESPONSIVE
+    ═══════════════════════════════════════ */
+    @media (max-width: 900px) {
+        .steps-grid { grid-template-columns: 1fr; max-width: 420px; }
+        .steps-grid::before { display: none; }
+        .features-grid { grid-template-columns: 1fr 1fr; }
+        .roles-grid { grid-template-columns: 1fr; max-width: 380px; }
+        .navbar { padding: 14px 24px; }
+        .navbar.scrolled { padding: 10px 24px; }
+        .nav-links { display: none; }
+        .nav-toggle { display: block; }
+    }
+
+    @media (max-width: 600px) {
+        .features-grid { grid-template-columns: 1fr; }
+        .hero-stats { gap: 24px; }
+        .hero-stat-divider { display: none; }
+        .footer { flex-direction: column; text-align: center; padding: 28px 24px; }
+        .cta-card { padding: 40px 24px; }
+    }
+    </style>
+</head>
+<body>
+
+<!-- ════════════ NAVBAR ════════════ -->
+<nav class="navbar" id="mainNav">
+    <a href="/home" class="nav-logo">
+        <div class="nav-logo-icon">A</div>
+        <span class="nav-logo-text">ASPU</span>
+    </a>
+
+    <ul class="nav-links">
+        <li><a href="#how">Comment ça marche</a></li>
+        <li><a href="#features">Fonctionnalités</a></li>
+        <li><a href="#roles">Rôles</a></li>
+    </ul>
+
+    <div class="nav-cta">
+        <a href="/login" class="btn-nav-login">
+            <i class="bi bi-box-arrow-in-right me-1"></i> Se connecter
+        </a>
+        <a href="/register" class="btn-nav-register">
+            <i class="bi bi-person-plus me-1"></i> S'inscrire
+        </a>
+    </div>
+
+    <button class="nav-toggle" id="navToggle">
+        <i class="bi bi-list"></i>
+    </button>
+</nav>
+
+<!-- ════════════ HERO ════════════ -->
+<section class="hero" id="hero">
+    <div class="hero-bg"></div>
+    <div class="hero-grid"></div>
+    <div class="hero-blob3"></div>
+
+    <div class="hero-content">
+
+        <div class="hero-badge">
+            <span class="hero-badge-dot"></span>
+            Plateforme citoyenne &mdash; Cameroun
+        </div>
+
+        <h1>
+            Signalez, Suivez,<br>
+            <span class="highlight">Améliorez votre ville</span>
+        </h1>
+
+        <p>
+            ASPU connecte les citoyens aux mairies pour résoudre rapidement
+            les problèmes urbains. Nids de poule, éclairage, déchets &mdash;
+            chaque signalement compte.
+        </p>
+
+        <div class="hero-btns">
+            <a href="/register" class="btn-hero-primary">
+                <i class="bi bi-person-plus"></i> Créer un compte
+            </a>
+            <a href="#how" class="btn-hero-secondary">
+                <i class="bi bi-play-circle"></i> Comment ça marche
+            </a>
+        </div>
+
+        <div class="hero-stats">
+            <div class="hero-stat">
+                <div class="hero-stat-value" data-count="3">0</div>
+                <div class="hero-stat-label">Rôles</div>
+            </div>
+            <div class="hero-stat-divider"></div>
+            <div class="hero-stat">
+                <div class="hero-stat-value" data-count="100">0</div>
+                <div class="hero-stat-label">% Gratuit</div>
+            </div>
+            <div class="hero-stat-divider"></div>
+            <div class="hero-stat">
+                <div class="hero-stat-value" data-count="24" data-suffix="/7">0</div>
+                <div class="hero-stat-label">Disponibilité</div>
+            </div>
+            <div class="hero-stat-divider"></div>
+            <div class="hero-stat">
+                <div class="hero-stat-value" data-count="3" data-suffix=" statuts">0</div>
+                <div class="hero-stat-label">Suivi en temps réel</div>
+            </div>
+        </div>
+
+    </div>
+
+    <div class="scroll-indicator">
+        <div class="scroll-mouse"><div class="scroll-wheel"></div></div>
+        <span>Défiler</span>
+    </div>
+</section>
+
+<!-- ════════════ HOW IT WORKS ════════════ -->
+<section class="section-how" id="how">
+    <p class="section-label">Processus</p>
+    <h2 class="section-title">Comment ça marche</h2>
+    <p class="section-sub">
+        Trois étapes simples pour transformer un problème en solution concrète pour votre quartier.
+    </p>
+
+    <div class="steps-grid">
+
+        <div class="step-card">
+            <div class="step-number">01</div>
+            <i class="bi bi-megaphone step-icon"></i>
+            <div class="step-title">Signalez</div>
+            <div class="step-desc">
+                Photographiez le problème, décrivez-le et soumettez votre signalement en quelques clics depuis n'importe quel appareil.
+            </div>
+        </div>
+
+        <div class="step-card">
+            <div class="step-number">02</div>
+            <i class="bi bi-building step-icon"></i>
+            <div class="step-title">Traitement</div>
+            <div class="step-desc">
+                La mairie compétente reçoit votre signalement, l'analyse et planifie les actions correctives nécessaires.
+            </div>
+        </div>
+
+        <div class="step-card">
+            <div class="step-number">03</div>
+            <i class="bi bi-check2-all step-icon"></i>
+            <div class="step-title">Résolution</div>
+            <div class="step-desc">
+                Le problème est résolu et vous êtes informé en temps réel de l'avancement jusqu'à la clôture du signalement.
+            </div>
+        </div>
+
+    </div>
+</section>
+
+<!-- ════════════ FEATURES ════════════ -->
+<section class="section-features" id="features">
+    <p class="section-label">Fonctionnalités</p>
+    <h2 class="section-title">Tout ce dont vous avez besoin</h2>
+    <p class="section-sub">
+        Une plateforme complète pour une gestion urbaine collaborative et efficace.
+    </p>
+
+    <div class="features-grid">
+
+        <div class="feature-card">
+            <div class="feature-icon-wrap"><i class="bi bi-camera"></i></div>
+            <div class="feature-title">Photos & preuves</div>
+            <div class="feature-desc">Ajoutez des photos à vos signalements pour documenter les problèmes avec précision.</div>
+        </div>
+
+        <div class="feature-card">
+            <div class="feature-icon-wrap"><i class="bi bi-geo-alt"></i></div>
+            <div class="feature-title">Localisation précise</div>
+            <div class="feature-desc">Indiquez le quartier exact pour une attribution automatique à la mairie compétente.</div>
+        </div>
+
+        <div class="feature-card">
+            <div class="feature-icon-wrap"><i class="bi bi-activity"></i></div>
+            <div class="feature-title">Suivi en temps réel</div>
+            <div class="feature-desc">Suivez l'état de vos signalements : Signalé → En cours → Résolu.</div>
+        </div>
+
+        <div class="feature-card">
+            <div class="feature-icon-wrap"><i class="bi bi-bar-chart-line"></i></div>
+            <div class="feature-title">Tableaux de bord</div>
+            <div class="feature-desc">Visualisez les statistiques et l'avancement des résolutions par mairie et par type.</div>
+        </div>
+
+        <div class="feature-card">
+            <div class="feature-icon-wrap"><i class="bi bi-shield-check"></i></div>
+            <div class="feature-title">Accès sécurisé</div>
+            <div class="feature-desc">Compte vérifié par email avec des droits adaptés à chaque rôle utilisateur.</div>
+        </div>
+
+        <div class="feature-card">
+            <div class="feature-icon-wrap"><i class="bi bi-file-earmark-text"></i></div>
+            <div class="feature-title">Rapports officiels</div>
+            <div class="feature-desc">Les administrateurs peuvent rédiger et archiver des rapports pour chaque problème traité.</div>
+        </div>
+
+    </div>
+</section>
+
+<!-- ════════════ RÔLES ════════════ -->
+<section class="section-roles" id="roles">
+    <p class="section-label">Acteurs</p>
+    <h2 class="section-title">Trois rôles, une mission</h2>
+    <p class="section-sub">
+        Chaque acteur joue un rôle clé dans l'amélioration du cadre de vie urbain.
+    </p>
+
+    <div class="roles-grid">
+
+        <div class="role-card citizen">
+            <div class="role-icon"><i class="bi bi-person-raised-hand"></i></div>
+            <div class="role-name">Citoyen</div>
+            <span class="role-badge">Signalement</span>
+            <div class="role-desc">
+                Signale les problèmes de son quartier, suit leur avancement et contribue activement à l'amélioration de sa ville.
+            </div>
+        </div>
+
+        <div class="role-card admin">
+            <div class="role-icon"><i class="bi bi-building"></i></div>
+            <div class="role-name">Administrateur</div>
+            <span class="role-badge">Mairie</span>
+            <div class="role-desc">
+                Gère les signalements assignés à sa mairie, met à jour les statuts et rédige des rapports officiels.
+            </div>
+        </div>
+
+        <div class="role-card superadmin">
+            <div class="role-icon"><i class="bi bi-shield-lock"></i></div>
+            <div class="role-name">Super Admin</div>
+            <span class="role-badge">Plateforme</span>
+            <div class="role-desc">
+                Supervise l'ensemble de la plateforme, gère les mairies, les administrateurs et les types de problèmes.
+            </div>
+        </div>
+
+    </div>
+</section>
+
+<!-- ════════════ CTA ════════════ -->
+<section class="section-cta" id="cta">
+    <div class="cta-glow"></div>
+    <div class="cta-card">
+        <h2>Prêt à améliorer<br>votre ville ?</h2>
+        <p>Rejoignez ASPU gratuitement et faites entendre votre voix pour un cadre de vie meilleur.</p>
+        <div class="cta-btns">
+            <a href="/register" class="btn-hero-primary">
+                <i class="bi bi-person-plus"></i> Créer un compte gratuit
+            </a>
+            <a href="/login" class="btn-hero-secondary">
+                <i class="bi bi-box-arrow-in-right"></i> Se connecter
+            </a>
+        </div>
+    </div>
+</section>
+
+<!-- ════════════ FOOTER ════════════ -->
+<footer class="footer">
+    <a href="/home" class="footer-logo">
+        <div class="footer-logo-icon">A</div>
+        <span class="footer-logo-text">ASPU</span>
+    </a>
+    <span class="footer-copy">&copy; 2026 ASPU — Application de Signalement des Problèmes Urbains</span>
+    <ul class="footer-links">
+        <li><a href="/login">Connexion</a></li>
+        <li><a href="/register">Inscription</a></li>
+    </ul>
+</footer>
+
+<!-- ════════════ SCRIPTS ════════════ -->
+<script>
+(function () {
+
+    /* ── Navbar scroll effect ── */
+    const nav = document.getElementById('mainNav');
+    window.addEventListener('scroll', () => {
+        nav.classList.toggle('scrolled', window.scrollY > 40);
+    });
+
+    /* ── Mobile nav toggle ── */
+    document.getElementById('navToggle').addEventListener('click', () => {
+        const links = document.querySelector('.nav-links');
+        const isOpen = links.style.display === 'flex';
+        links.style.display = isOpen ? 'none' : 'flex';
+        links.style.flexDirection = 'column';
+        links.style.position = 'absolute';
+        links.style.top = '64px';
+        links.style.left = '0';
+        links.style.right = '0';
+        links.style.background = 'rgba(13,17,23,.97)';
+        links.style.padding = '16px 24px 24px';
+        links.style.borderBottom = '1px solid rgba(255,255,255,.07)';
+        if (isOpen) links.style.display = 'none';
+    });
+
+    /* ── Smooth active nav link ── */
+    const sections = document.querySelectorAll('section[id]');
+    const navLinks = document.querySelectorAll('.nav-links a');
+
+    window.addEventListener('scroll', () => {
+        let current = '';
+        sections.forEach(s => {
+            if (window.scrollY >= s.offsetTop - 120) current = s.id;
+        });
+        navLinks.forEach(a => {
+            a.style.color = a.getAttribute('href') === '#' + current
+                ? '#fff'
+                : 'rgba(255,255,255,.5)';
+        });
+    });
+
+    /* ── Hero stat counter animation ── */
+    function animateStat(el) {
+        const target  = parseInt(el.dataset.count) || 0;
+        const suffix  = el.dataset.suffix || '';
+        const dur     = 1200;
+        const step    = target / (dur / 16);
+        let cur = 0;
+        const t = setInterval(() => {
+            cur += step;
+            if (cur >= target) { cur = target; clearInterval(t); }
+            el.textContent = Math.floor(cur) + suffix;
+        }, 16);
+    }
+
+    const statsObs = new IntersectionObserver(entries => {
+        if (entries[0].isIntersecting) {
+            document.querySelectorAll('.hero-stat-value[data-count]').forEach(animateStat);
+            statsObs.disconnect();
+        }
+    }, { threshold: 0.3 });
+
+    const heroStats = document.querySelector('.hero-stats');
+    if (heroStats) statsObs.observe(heroStats);
+
+    /* ── Reveal on scroll (steps, features, roles, cta) ── */
+    const revealObs = new IntersectionObserver((entries, obs) => {
+        entries.forEach(e => {
+            if (e.isIntersecting) {
+                e.target.classList.add('reveal');
+                obs.unobserve(e.target);
+            }
+        });
+    }, { threshold: 0.12 });
+
+    document.querySelectorAll('.step-card, .feature-card, .role-card, .cta-card')
+        .forEach((el, i) => {
+            el.style.animationDelay = (i % 3) * 0.1 + 's';
+            revealObs.observe(el);
+        });
+
+    /* ── Parallax léger sur le hero ── */
+    window.addEventListener('scroll', () => {
+        const y = window.scrollY;
+        const content = document.querySelector('.hero-content');
+        if (content) content.style.transform = `translateY(${y * 0.25}px)`;
+    });
+
+})();
+</script>
+
+</body>
+</html>

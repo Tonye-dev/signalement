@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+
+<!-- ══════════════════════════════════════════
+     PROFIL CITOYEN  –  fragment content
+     Controller : WebProfilCitoyenController
+     GET /citoyen/profil
+══════════════════════════════════════════ -->
+<div th:fragment="content">
+
+<style>
+    :root {
+        --accent:#4f8ef7; --accent2:#38d9a9; --accent3:#f7934f; --accent4:#f76f8e;
+        --bg:#f0f4fb; --card-bg:#fff; --text-main:#1a2236; --text-muted:#7b8fb5; --border:#e4eaf5;
+    }
+
+    .profil-wrapper {
+        max-width: 860px;
+        margin: 0 auto;
+    }
+
+    /* ── CARTE HERO PROFIL ── */
+    .profil-hero {
+        background: linear-gradient(120deg, #1a2236 0%, #1e3a5f 60%, #1a2f4a 100%);
+        border-radius: 20px;
+        padding: 36px 40px;
+        margin-bottom: 22px;
+        display: flex;
+        align-items: center;
+        gap: 28px;
+        position: relative;
+        overflow: hidden;
+        animation: slideUp .45s ease both;
+    }
+
+    .profil-hero::before {
+        content: '';
+        position: absolute;
+        top: -60px; right: -60px;
+        width: 200px; height: 200px;
+        background: rgba(79,142,247,.08);
+        border-radius: 50%;
+    }
+
+    /* Photo de profil grande */
+    .profil-photo-wrap {
+        position: relative;
+        flex-shrink: 0;
+    }
+
+    .profil-photo {
+        width: 96px; height: 96px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 3px solid rgba(255,255,255,.2);
+        box-shadow: 0 8px 24px rgba(0,0,0,.3);
+        display: block;
+    }
+
+    /* Avatar gris si pas de photo */
+    .profil-photo-placeholder {
+        width: 96px; height: 96px;
+        border-radius: 50%;
+        background: rgba(255,255,255,.08);
+        border: 3px solid rgba(255,255,255,.15);
+        display: flex; align-items: center; justify-content: center;
+        font-size: 2.2rem;
+        color: rgba(255,255,255,.3);
+    }
+
+    .profil-photo-edit {
+        position: absolute;
+        bottom: 2px; right: 2px;
+        width: 28px; height: 28px;
+        background: var(--accent);
+        border-radius: 50%;
+        display: flex; align-items: center; justify-content: center;
+        font-size: .72rem;
+        color: #fff;
+        text-decoration: none;
+        box-shadow: 0 2px 8px rgba(0,0,0,.2);
+        transition: background .18s, transform .18s;
+    }
+    .profil-photo-edit:hover { background: #3a7de8; transform: scale(1.1); }
+
+    .profil-hero-info { flex: 1; position: relative; z-index: 1; }
+
+    .profil-hero-name {
+        font-family: 'Syne', sans-serif;
+        font-size: 1.5rem;
+        font-weight: 800;
+        color: #fff;
+        margin-bottom: 5px;
+    }
+
+    .profil-hero-email {
+        font-size: .85rem;
+        color: rgba(255,255,255,.5);
+        margin-bottom: 12px;
+    }
+
+    .profil-hero-badges { display: flex; gap: 8px; flex-wrap: wrap; }
+
+    .profil-badge {
+        display: inline-flex; align-items: center; gap: 5px;
+        padding: 4px 12px; border-radius: 50px;
+        font-size: .72rem; font-weight: 600;
+    }
+
+    .pb-citoyen { background: rgba(56,217,169,.15); color: var(--accent2); border: 1px solid rgba(56,217,169,.25); }
+    .pb-active  { background: rgba(56,217,169,.15); color: var(--accent2); border: 1px solid rgba(56,217,169,.25); }
+    .pb-inactive{ background: rgba(247,111,142,.15); color: var(--accent4); border: 1px solid rgba(247,111,142,.25); }
+
+    .profil-hero-actions {
+        display: flex; flex-direction: column; gap: 8px;
+        flex-shrink: 0; position: relative; z-index: 1;
+    }
+
+    .btn-profil-edit {
+        background: rgba(255,255,255,.1);
+        color: #fff;
+        border: 1px solid rgba(255,255,255,.2);
+        border-radius: 10px;
+        padding: 9px 18px;
+        font-size: .82rem;
+        font-weight: 600;
+        text-decoration: none;
+        display: flex; align-items: center; gap: 7px;
+        transition: all .18s;
+        white-space: nowrap;
+    }
+    .btn-profil-edit:hover { background: rgba(255,255,255,.18); color: #fff; }
+
+    /* ── INFOS CARDS ── */
+    .info-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+        margin-bottom: 16px;
+    }
+
+    .info-card {
+        background: var(--card-bg);
+        border-radius: 16px;
+        border: 1px solid var(--border);
+        padding: 22px 24px;
+        animation: slideUp .5s ease both;
+    }
+
+    .info-card:hover { box-shadow: 0 8px 24px rgba(0,0,0,.06); }
+
+    .info-card-title {
+        font-family: 'Syne', sans-serif;
+        font-size: .85rem;
+        font-weight: 700;
+        color: var(--text-main);
+        margin-bottom: 16px;
+        display: flex; align-items: center; gap: 8px;
+    }
+
+    .info-card-title i { color: var(--accent); }
+
+    .info-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        padding: 9px 0;
+        border-bottom: 1px solid #f5f7fc;
+        gap: 12px;
+    }
+    .info-row:last-child { border-bottom: none; padding-bottom: 0; }
+
+    .info-label {
+        font-size: .77rem;
+        color: var(--text-muted);
+        font-weight: 500;
+        flex-shrink: 0;
+    }
+
+    .info-value {
+        font-size: .82rem;
+        color: var(--text-main);
+        font-weight: 600;
+        text-align: right;
+    }
+
+    /* ── STATS SIGNALEMENTS ── */
+    .stats-row {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 14px;
+        margin-bottom: 16px;
+    }
+
+    .stat-mini {
+        background: var(--card-bg);
+        border-radius: 14px;
+        border: 1px solid var(--border);
+        padding: 16px;
+        text-align: center;
+        animation: slideUp .5s ease both;
+        transition: transform .2s, box-shadow .2s;
+    }
+    .stat-mini:hover { transform: translateY(-3px); box-shadow: 0 8px 20px rgba(0,0,0,.07); }
+
+    .stat-mini-value {
+        font-family: 'Syne', sans-serif;
+        font-size: 1.6rem;
+        font-weight: 800;
+        color: var(--text-main);
+        line-height: 1;
+    }
+    .stat-mini-label {
+        font-size: .7rem;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        letter-spacing: .07em;
+        margin-top: 4px;
+    }
+
+    .stat-mini:nth-child(1) .stat-mini-value { color: var(--accent); }
+    .stat-mini:nth-child(2) .stat-mini-value { color: var(--accent3); }
+    .stat-mini:nth-child(3) .stat-mini-value { color: var(--accent4); }
+    .stat-mini:nth-child(4) .stat-mini-value { color: var(--accent2); }
+
+    @keyframes slideUp {
+        from { opacity:0; transform:translateY(18px); }
+        to   { opacity:1; transform:translateY(0); }
+    }
+
+    .info-card:nth-child(1) { animation-delay: .1s; }
+    .info-card:nth-child(2) { animation-delay: .15s; }
+    .stat-mini:nth-child(1) { animation-delay: .05s; }
+    .stat-mini:nth-child(2) { animation-delay: .1s; }
+    .stat-mini:nth-child(3) { animation-delay: .15s; }
+    .stat-mini:nth-child(4) { animation-delay: .2s; }
+
+    @media (max-width: 768px) {
+        .profil-hero { flex-direction: column; text-align: center; padding: 28px 24px; }
+        .profil-hero-actions { flex-direction: row; }
+        .info-grid { grid-template-columns: 1fr; }
+        .stats-row { grid-template-columns: 1fr 1fr; }
+    }
+</style>
+
+<div class="profil-wrapper">
+
+    <!-- ── HERO PROFIL ── -->
+    <div class="profil-hero">
+        <div class="profil-photo-wrap">
+            <!-- Photo réelle -->
+            <th:block th:if="${currentUser.photoPath != null}">
+                <img class="profil-photo"
+                     th:src="@{${currentUser.photoPath}}"
+                     alt="Photo de profil">
+            </th:block>
+            <!-- Placeholder gris -->
+            <th:block th:unless="${currentUser.photoPath != null}">
+                <div class="profil-photo-placeholder">
+                    <i class="bi bi-person"></i>
+                </div>
+            </th:block>
+            <!-- Bouton modifier photo -->
+            <a th:href="@{/citoyen/profil/photo}" class="profil-photo-edit" title="Changer la photo">
+                <i class="bi bi-camera"></i>
+            </a>
+        </div>
+
+        <div class="profil-hero-info">
+            <div class="profil-hero-name"
+                 th:text="${currentUser.prenom + ' ' + currentUser.nom}">Prénom Nom</div>
+            <div class="profil-hero-email" th:text="${currentUser.email}">email@exemple.com</div>
+            <div class="profil-hero-badges">
+                <span class="profil-badge pb-citoyen">
+                    <i class="bi bi-person-check"></i> Citoyen
+                </span>
+                <span class="profil-badge pb-active" th:if="${currentUser.valide}">
+                    <i class="bi bi-check-circle"></i> Compte actif
+                </span>
+                <span class="profil-badge pb-inactive" th:unless="${currentUser.valide}">
+                    <i class="bi bi-x-circle"></i> Non activé
+                </span>
+            </div>
+        </div>
+
+        <div class="profil-hero-actions">
+            <a th:href="@{/citoyen/profil/modifier}" class="btn-profil-edit">
+                <i class="bi bi-pencil-square"></i> Modifier mes infos
+            </a>
+            <a th:href="@{/citoyen/profil/photo}" class="btn-profil-edit">
+                <i class="bi bi-camera"></i> Changer ma photo
+            </a>
+        </div>
+    </div>
+
+    <!-- ── STATS SIGNALEMENTS ── -->
+    <div class="stats-row" th:if="${dashboard != null}">
+        <div class="stat-mini">
+            <div class="stat-mini-value" th:text="${dashboard.totalProblemes}">0</div>
+            <div class="stat-mini-label">Total</div>
+        </div>
+        <div class="stat-mini">
+            <div class="stat-mini-value" th:text="${dashboard.problemesSignales}">0</div>
+            <div class="stat-mini-label">Signalés</div>
+        </div>
+        <div class="stat-mini">
+            <div class="stat-mini-value" th:text="${dashboard.problemesEnCours}">0</div>
+            <div class="stat-mini-label">En cours</div>
+        </div>
+        <div class="stat-mini">
+            <div class="stat-mini-value" th:text="${dashboard.problemesResolus}">0</div>
+            <div class="stat-mini-label">Résolus</div>
+        </div>
+    </div>
+
+    <!-- ── INFORMATIONS PERSONNELLES ── -->
+    <div class="info-grid">
+
+        <div class="info-card">
+            <div class="info-card-title">
+                <i class="bi bi-person-lines-fill"></i> Informations personnelles
+            </div>
+            <div class="info-row">
+                <span class="info-label">Nom complet</span>
+                <span class="info-value" th:text="${currentUser.prenom + ' ' + currentUser.nom}">—</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Email</span>
+                <span class="info-value" th:text="${currentUser.email}">—</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Téléphone</span>
+                <span class="info-value" th:text="${citoyen.telephone ?: '—'}">—</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Adresse</span>
+                <span class="info-value" th:text="${citoyen.adresse ?: '—'}">—</span>
+            </div>
+        </div>
+
+        <div class="info-card">
+            <div class="info-card-title">
+                <i class="bi bi-shield-check"></i> Informations du compte
+            </div>
+            <div class="info-row">
+                <span class="info-label">Rôle</span>
+                <span class="info-value">Citoyen</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Statut</span>
+                <span class="info-value">
+                    <span th:if="${currentUser.valide}"
+                          style="color:#38d9a9; font-weight:700;">
+                        <i class="bi bi-check-circle-fill"></i> Actif
+                    </span>
+                    <span th:unless="${currentUser.valide}"
+                          style="color:#f76f8e; font-weight:700;">
+                        <i class="bi bi-x-circle-fill"></i> Non activé
+                    </span>
+                </span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Photo de profil</span>
+                <span class="info-value">
+                    <span th:if="${currentUser.photoPath != null}"
+                          style="color:#38d9a9;"><i class="bi bi-check-circle-fill"></i> Définie</span>
+                    <span th:unless="${currentUser.photoPath != null}"
+                          style="color:#7b8fb5;"><i class="bi bi-dash-circle"></i> Non définie</span>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+</div>
+</div>
+</body>
+</html>

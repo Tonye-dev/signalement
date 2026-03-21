@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+<div th:fragment="content">
+<style>
+    :root { --accent:#4f8ef7; --accent2:#38d9a9; --accent3:#f7934f; --accent4:#f76f8e; --bg:#f0f4fb; --card-bg:#fff; --text-main:#1a2236; --text-muted:#7b8fb5; --border:#e4eaf5; }
+    .page-header { margin-bottom:24px; }
+    .page-header h2 { font-family:'Syne',sans-serif; font-size:1.3rem; font-weight:800; color:var(--text-main); margin:0; }
+    .page-header p { font-size:.82rem; color:var(--text-muted); margin:4px 0 0; }
+
+    .filters-row { display:flex; gap:10px; margin-bottom:18px; flex-wrap:wrap; align-items:center; }
+    .filter-select { background:var(--card-bg); border:1px solid var(--border); border-radius:10px; padding:8px 14px; font-size:.82rem; color:var(--text-main); outline:none; cursor:pointer; transition:border .18s; }
+    .filter-select:focus { border-color:var(--accent); }
+    .filter-tab { background:var(--card-bg); border:1px solid var(--border); border-radius:50px; padding:6px 14px; font-size:.76rem; font-weight:600; color:var(--text-muted); cursor:pointer; transition:all .15s; user-select:none; }
+    .filter-tab.active { background:rgba(79,142,247,.1); border-color:rgba(79,142,247,.3); color:var(--accent); }
+
+    .search-wrap { position:relative; margin-left:auto; }
+    .search-wrap input { background:var(--card-bg); border:1px solid var(--border); border-radius:8px; padding:7px 12px 7px 34px; font-size:.82rem; color:var(--text-main); outline:none; width:200px; }
+    .search-wrap input:focus { border-color:var(--accent); }
+    .search-wrap i { position:absolute; left:10px; top:50%; transform:translateY(-50%); color:var(--text-muted); font-size:.85rem; }
+
+    .problemes-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(300px,1fr)); gap:14px; }
+    .probleme-card { background:var(--card-bg); border-radius:16px; border:1px solid var(--border); animation:slideUp .4s ease both; transition:box-shadow .2s; }
+    .probleme-card:hover { box-shadow:0 8px 24px rgba(0,0,0,.07); }
+
+    .card-stripe { height:4px; border-radius:16px 16px 0 0; }
+    .card-stripe.SIGNALE  { background:var(--accent3); }
+    .card-stripe.EN_COURS { background:var(--accent); }
+    .card-stripe.RESOLU   { background:var(--accent2); }
+
+    .card-body { padding:16px; }
+    .card-top { display:flex; align-items:flex-start; justify-content:space-between; gap:8px; margin-bottom:8px; }
+    .card-titre { font-family:'Syne',sans-serif; font-weight:700; font-size:.88rem; color:var(--text-main); }
+    .statut-badge { display:inline-flex; align-items:center; gap:4px; border-radius:50px; padding:3px 9px; font-size:.7rem; font-weight:600; white-space:nowrap; flex-shrink:0; }
+    .badge-SIGNALE  { background:rgba(247,147,79,.1);  color:var(--accent3); }
+    .badge-EN_COURS { background:rgba(79,142,247,.1);  color:var(--accent); }
+    .badge-RESOLU   { background:rgba(56,217,169,.1);  color:var(--accent2); }
+
+    .card-type { font-size:.73rem; color:var(--accent); background:rgba(79,142,247,.07); border-radius:50px; padding:2px 8px; display:inline-block; margin-bottom:6px; }
+    .card-desc { font-size:.8rem; color:var(--text-muted); line-height:1.5; margin-bottom:10px; overflow:hidden; max-height:2.8em; }
+    .card-meta { display:flex; flex-wrap:wrap; gap:10px; margin-bottom:10px; }
+    .card-meta span { font-size:.73rem; color:var(--text-muted); display:flex; align-items:center; gap:4px; }
+
+    /* Photos avant/après */
+    .photos-section { margin-bottom:8px; }
+    .photos-label { font-size:.68rem; font-weight:700; text-transform:uppercase; letter-spacing:.08em; margin-bottom:5px; display:flex; align-items:center; gap:4px; }
+    .photos-label.avant { color:var(--text-muted); }
+    .photos-label.apres { color:var(--accent2); }
+    .photos-row { display:flex; gap:5px; }
+    .photo-thumb { width:46px; height:46px; border-radius:7px; object-fit:cover; border:1px solid var(--border); cursor:pointer; transition:transform .15s; }
+    .photo-thumb:hover { transform:scale(1.07); }
+
+    /* Temps résolution */
+    .temps-badge { display:inline-flex; align-items:center; gap:4px; background:rgba(56,217,169,.1); color:var(--accent2); border-radius:50px; padding:3px 9px; font-size:.72rem; font-weight:600; }
+
+    /* Lightbox */
+    .lightbox { display:none; position:fixed; inset:0; background:rgba(0,0,0,.85); z-index:2000; align-items:center; justify-content:center; }
+    .lightbox.open { display:flex; }
+    .lightbox img { max-width:90vw; max-height:85vh; border-radius:12px; }
+    .lightbox-close { position:fixed; top:20px; right:24px; color:#fff; background:rgba(255,255,255,.1); border:none; border-radius:50%; width:40px; height:40px; font-size:1.4rem; cursor:pointer; display:flex; align-items:center; justify-content:center; }
+
+    .empty-state { padding:60px; text-align:center; color:var(--text-muted); background:var(--card-bg); border-radius:18px; border:1px solid var(--border); }
+    .empty-state i { font-size:2.5rem; opacity:.2; display:block; margin-bottom:12px; }
+    .results-count { font-size:.8rem; color:var(--text-muted); margin-bottom:14px; }
+
+    @keyframes slideUp { from{opacity:0;transform:translateY(18px)} to{opacity:1;transform:translateY(0)} }
+    @media(max-width:600px) { .problemes-grid { grid-template-columns:1fr; } }
+</style>
+
+<div class="page-header">
+    <h2><i class="bi bi-pin-map me-2" style="color:var(--accent);"></i>Problèmes par quartier</h2>
+    <p>Tous les signalements de la plateforme, consultables par quartier</p>
+</div>
+
+<!-- Filtres -->
+<div class="filters-row">
+    <select id="quartierSelect" class="filter-select" onchange="filtrerQuartier()">
+        <option value="">Tous les quartiers</option>
+        <option th:each="q : ${quartiers}" th:value="${q}" th:text="${q}">Quartier</option>
+    </select>
+
+    <span class="filter-tab active" onclick="filtrerStatut('TOUS', this)">Tous</span>
+    <span class="filter-tab" onclick="filtrerStatut('SIGNALE', this)">Signalés</span>
+    <span class="filter-tab" onclick="filtrerStatut('EN_COURS', this)">En cours</span>
+    <span class="filter-tab" onclick="filtrerStatut('RESOLU', this)">Résolus</span>
+
+    <div class="search-wrap">
+        <i class="bi bi-search"></i>
+        <input type="text" id="searchInput" placeholder="Rechercher...">
+    </div>
+</div>
+
+<p class="results-count" id="resultsCount"></p>
+
+<div th:if="${problemes == null or problemes.isEmpty()}" class="empty-state">
+    <i class="bi bi-clipboard-x"></i>
+    <p>Aucun signalement disponible pour le moment.</p>
+</div>
+
+<div class="problemes-grid" id="problemesGrid" th:unless="${problemes == null or problemes.isEmpty()}">
+    <div th:each="p, stat : ${problemes}"
+         class="probleme-card"
+         th:data-statut="${p.statut.name()}"
+         th:data-quartier="${p.quartier}"
+         th:style="'animation-delay:' + ${stat.index * 0.04} + 's'">
+
+        <div class="card-stripe" th:classappend="${p.statut.name()}"></div>
+
+        <div class="card-body">
+            <div class="card-top">
+                <div class="card-titre" th:text="${p.titre}">Titre</div>
+                <span th:switch="${p.statut.name()}">
+                    <span th:case="'SIGNALE'"  class="statut-badge badge-SIGNALE"><i class="bi bi-flag-fill"></i> Signalé</span>
+                    <span th:case="'EN_COURS'" class="statut-badge badge-EN_COURS"><i class="bi bi-arrow-repeat"></i> En cours</span>
+                    <span th:case="'RESOLU'"   class="statut-badge badge-RESOLU"><i class="bi bi-check-circle-fill"></i> Résolu</span>
+                </span>
+            </div>
+
+            <span class="card-type" th:if="${p.typeProbleme != null}" th:text="${p.typeProbleme.nomType}">Type</span>
+            <div class="card-desc" th:text="${p.description}">Description</div>
+
+            <div class="card-meta">
+                <span><i class="bi bi-geo-alt"></i> <span th:text="${p.quartier}">Quartier</span></span>
+                <span><i class="bi bi-calendar3"></i>
+                    <span th:text="${#temporals.format(p.dateSignalement, 'dd/MM/yyyy')}">Date</span>
+                </span>
+            </div>
+
+            <!-- Temps résolution -->
+            <div class="temps-badge" style="margin-bottom:10px;"
+                 th:if="${p.statut.name() == 'RESOLU' and p.dateResolution != null}">
+                <i class="bi bi-stopwatch"></i>
+                Résolu en <strong th:text="${p.tempsResolutionFormate}" style="margin-left:3px;">—</strong>
+            </div>
+
+            <!-- Photos avant -->
+            <div class="photos-section" th:if="${p.photos != null and !p.photos.isEmpty()}">
+                <div class="photos-label avant"><i class="bi bi-camera"></i> Signalement</div>
+                <div class="photos-row">
+                    <th:block th:each="ph, pStat : ${p.photos}" th:if="${pStat.index < 3}">
+                        <img class="photo-thumb" th:src="@{${ph.chemin}}" alt=""
+                             th:onclick="'openLightbox(\'' + ${ph.chemin} + '\')'">
+                    </th:block>
+                </div>
+            </div>
+
+            <!-- Photos après résolution -->
+            <div class="photos-section"
+                 th:if="${p.photosResolution != null and !p.photosResolution.isEmpty()}">
+                <div class="photos-label apres"><i class="bi bi-check-circle"></i> Après résolution</div>
+                <div class="photos-row">
+                    <th:block th:each="ph, pStat : ${p.photosResolution}" th:if="${pStat.index < 3}">
+                        <img class="photo-thumb" th:src="@{${ph.chemin}}" alt=""
+                             th:onclick="'openLightbox(\'' + ${ph.chemin} + '\')'">
+                    </th:block>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Lightbox -->
+<div class="lightbox" id="lightbox" onclick="closeLightbox()">
+    <button class="lightbox-close" onclick="closeLightbox()"><i class="bi bi-x"></i></button>
+    <img id="lightboxImg" src="" alt="">
+</div>
+
+<script>
+    let filtreStatut = 'TOUS';
+    let filtreQuartier = '';
+
+    function appliquerFiltres() {
+        const search = document.getElementById('searchInput').value.toLowerCase();
+        let count = 0;
+        document.querySelectorAll('.probleme-card').forEach(c => {
+            const matchStatut   = filtreStatut === 'TOUS' || c.dataset.statut === filtreStatut;
+            const matchQuartier = !filtreQuartier || c.dataset.quartier === filtreQuartier;
+            const matchSearch   = !search || c.textContent.toLowerCase().includes(search);
+            const visible = matchStatut && matchQuartier && matchSearch;
+            c.style.display = visible ? '' : 'none';
+            if (visible) count++;
+        });
+        document.getElementById('resultsCount').textContent =
+            count + ' signalement' + (count > 1 ? 's' : '') + ' affiché' + (count > 1 ? 's' : '');
+    }
+
+    function filtrerStatut(statut, el) {
+        filtreStatut = statut;
+        document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
+        el.classList.add('active');
+        appliquerFiltres();
+    }
+
+    function filtrerQuartier() {
+        filtreQuartier = document.getElementById('quartierSelect').value;
+        appliquerFiltres();
+    }
+
+    document.getElementById('searchInput')?.addEventListener('input', appliquerFiltres);
+
+    // Init count
+    window.addEventListener('load', appliquerFiltres);
+
+    function openLightbox(src) {
+        document.getElementById('lightboxImg').src = src;
+        document.getElementById('lightbox').classList.add('open');
+        event.stopPropagation();
+    }
+    function closeLightbox() {
+        document.getElementById('lightbox').classList.remove('open');
+    }
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') closeLightbox(); });
+</script>
+</div>
+</body>
+</html>

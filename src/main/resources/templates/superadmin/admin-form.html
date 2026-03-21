@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+<div th:fragment="content">
+<style>
+    :root { --accent:#4f8ef7; --accent2:#38d9a9; --accent3:#f7934f; --accent4:#f76f8e; --bg:#f0f4fb; --card-bg:#fff; --text-main:#1a2236; --text-muted:#7b8fb5; --border:#e4eaf5; }
+    .page-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:24px; flex-wrap:wrap; gap:12px; }
+    .page-header-left h2 { font-family:'Syne',sans-serif; font-size:1.3rem; font-weight:800; color:var(--text-main); margin:0; }
+    .page-header-left p { font-size:.82rem; color:var(--text-muted); margin:4px 0 0; }
+    .btn-secondary-aspu { background:var(--bg); color:var(--text-main); border:1px solid var(--border); border-radius:10px; padding:9px 18px; font-size:.83rem; font-weight:500; text-decoration:none; display:inline-flex; align-items:center; gap:7px; transition:all .18s; }
+    .btn-secondary-aspu:hover { border-color:var(--accent); color:var(--accent); }
+    .form-card { background:var(--card-bg); border-radius:18px; border:1px solid var(--border); padding:32px; max-width:680px; animation:slideUp .45s ease both; }
+    .form-group { margin-bottom:20px; }
+    .form-label { display:block; font-size:.8rem; font-weight:600; color:var(--text-main); margin-bottom:7px; }
+    .form-label span { color:var(--accent4); margin-left:2px; }
+    .form-input { width:100%; background:var(--bg); border:1px solid var(--border); border-radius:10px; padding:11px 14px; font-size:.85rem; color:var(--text-main); outline:none; transition:border .18s,box-shadow .18s; font-family:'DM Sans',sans-serif; }
+    .form-input:focus { border-color:var(--accent); box-shadow:0 0 0 3px rgba(79,142,247,.08); }
+    .form-input::placeholder { color:var(--text-muted); }
+    select.form-input { cursor:pointer; }
+    .form-row { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+    .mairie-banner { background:linear-gradient(120deg,#1a2236,#1e3a5f); border-radius:14px; padding:18px 22px; margin-bottom:24px; display:flex; align-items:center; gap:14px; color:#fff; }
+    .mairie-banner i { font-size:1.4rem; color:var(--accent); }
+    .mairie-banner-name { font-family:'Syne',sans-serif; font-weight:700; font-size:1rem; }
+    .mairie-banner-sub { font-size:.78rem; color:rgba(255,255,255,.5); margin-top:2px; }
+    .form-actions { display:flex; gap:10px; margin-top:28px; padding-top:20px; border-top:1px solid var(--border); flex-wrap:wrap; }
+    .btn-submit { background:var(--accent); color:#fff; border:none; border-radius:10px; padding:12px 28px; font-size:.88rem; font-weight:600; cursor:pointer; transition:background .18s,transform .18s; display:inline-flex; align-items:center; gap:8px; }
+    .btn-submit:hover { background:#3a7de8; transform:translateY(-2px); }
+    @keyframes slideUp { from{opacity:0;transform:translateY(18px)} to{opacity:1;transform:translateY(0)} }
+    @media(max-width:600px) { .form-row { grid-template-columns:1fr; } }
+</style>
+
+<div class="page-header">
+    <div class="page-header-left">
+        <h2><i class="bi bi-person-plus me-2" style="color:var(--accent);"></i>Ajouter un administrateur</h2>
+        <p>Créer un compte administrateur et l'assigner à une mairie</p>
+    </div>
+    <a th:href="@{/superadmin/administrateurs}" class="btn-secondary-aspu">
+        <i class="bi bi-arrow-left"></i> Retour
+    </a>
+</div>
+
+<div class="form-card">
+
+    <!-- Bannière mairie si on vient d'une mairie spécifique -->
+    <div class="mairie-banner" th:if="${mairie != null}">
+        <i class="bi bi-building"></i>
+        <div>
+            <div class="mairie-banner-name" th:text="${mairie.nom}">Nom mairie</div>
+            <div class="mairie-banner-sub">Cet administrateur sera assigné à cette mairie</div>
+        </div>
+    </div>
+
+    <form id="adminForm">
+
+        <div class="form-row">
+            <div class="form-group">
+                <label class="form-label">Nom <span>*</span></label>
+                <input type="text" id="nom" class="form-input" placeholder="Nom de famille" required>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Prénom <span>*</span></label>
+                <input type="text" id="prenom" class="form-input" placeholder="Prénom" required>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label class="form-label">Adresse email <span>*</span></label>
+            <input type="email" id="email" class="form-input" placeholder="admin@exemple.com" required>
+        </div>
+
+        <div class="form-group">
+            <label class="form-label">Mot de passe <span>*</span></label>
+            <input type="password" id="motdepasse" class="form-input" placeholder="Minimum 6 caractères" required minlength="6">
+        </div>
+
+        <!-- Sélection mairie si pas déjà définie -->
+        <div class="form-group" th:if="${mairie == null}">
+            <label class="form-label">Mairie assignée <span>*</span></label>
+            <select id="mairieId" class="form-input" required>
+                <option value="">-- Sélectionner une mairie --</option>
+                <option th:each="m : ${mairies}"
+                        th:value="${m.id}"
+                        th:text="${m.nom}">Mairie</option>
+            </select>
+        </div>
+
+        <div class="form-actions">
+            <button type="submit" class="btn-submit" id="submitBtn">
+                <i class="bi bi-check2"></i> Créer l'administrateur
+                <span id="spinner" class="d-none" style="width:14px;height:14px;border:2px solid rgba(255,255,255,.4);border-top-color:#fff;border-radius:50%;display:inline-block;animation:spin .7s linear infinite;"></span>
+            </button>
+            <a th:href="@{/superadmin/administrateurs}" class="btn-secondary-aspu">Annuler</a>
+        </div>
+
+    </form>
+</div>
+
+<div id="toast" style="display:none;position:fixed;top:20px;right:20px;z-index:1000;background:#1a2236;color:#fff;padding:12px 20px;border-radius:12px;font-size:.84rem;box-shadow:0 8px 24px rgba(0,0,0,.2);">
+    <span id="toastMsg"></span>
+</div>
+
+<script>
+    const mairieIdFromServer = /*[[${mairie?.id}]]*/ null;
+
+    function showToast(msg, ok = true) {
+        const t = document.getElementById('toast');
+        document.getElementById('toastMsg').textContent = msg;
+        t.style.background = ok ? '#1a2236' : '#f76f8e';
+        t.style.display = 'block';
+        setTimeout(() => t.style.display = 'none', 3500);
+    }
+
+    document.getElementById('adminForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        const btn = document.getElementById('submitBtn');
+        const spinner = document.getElementById('spinner');
+        btn.disabled = true;
+        spinner.classList.remove('d-none');
+
+        const mairieId = mairieIdFromServer || document.getElementById('mairieId')?.value;
+        if (!mairieId) { showToast('Veuillez sélectionner une mairie.', false); btn.disabled = false; spinner.classList.add('d-none'); return; }
+
+        const body = {
+            nom: document.getElementById('nom').value,
+            prenom: document.getElementById('prenom').value,
+            email: document.getElementById('email').value,
+            motdepasse: document.getElementById('motdepasse').value,
+            role: 'ADMINISTRATEUR',
+            valide: true
+        };
+
+        try {
+            const res = await fetch(`/api/superadmin/mairies/${mairieId}/administrateurs`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(body)
+            });
+            if (res.ok) {
+                showToast('Administrateur créé avec succès !');
+                setTimeout(() => window.location.href = '/superadmin/administrateurs', 1500);
+            } else {
+                const err = await res.text();
+                showToast('Erreur : ' + err, false);
+            }
+        } catch(err) {
+            showToast('Erreur réseau. Veuillez réessayer.', false);
+        }
+
+        btn.disabled = false;
+        spinner.classList.add('d-none');
+    });
+</script>
+</div>
+</body>
+</html>

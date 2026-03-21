@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+<div th:fragment="content">
+<style>
+    :root { --accent:#4f8ef7; --accent2:#38d9a9; --accent3:#f7934f; --accent4:#f76f8e; --accent5:#a78bfa; --bg:#f0f4fb; --card-bg:#fff; --text-main:#1a2236; --text-muted:#7b8fb5; --border:#e4eaf5; }
+    .page-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:24px; flex-wrap:wrap; gap:12px; }
+    .page-header-left h2 { font-family:'Syne',sans-serif; font-size:1.3rem; font-weight:800; color:var(--text-main); margin:0; }
+    .page-header-left p { font-size:.82rem; color:var(--text-muted); margin:4px 0 0; }
+
+    /* Stat mini */
+    .stats-row { display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin-bottom:20px; }
+    .stat-mini { background:var(--card-bg); border-radius:14px; border:1px solid var(--border); padding:16px 18px; display:flex; align-items:center; gap:12px; animation:slideUp .45s ease both; transition:transform .2s,box-shadow .2s; }
+    .stat-mini:hover { transform:translateY(-3px); box-shadow:0 8px 20px rgba(0,0,0,.07); }
+    .stat-mini-icon { width:40px; height:40px; border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:1rem; flex-shrink:0; }
+    .stat-mini-value { font-family:'Syne',sans-serif; font-size:1.4rem; font-weight:800; color:var(--text-main); line-height:1; }
+    .stat-mini-label { font-size:.7rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:.07em; margin-top:3px; }
+
+    .table-card { background:var(--card-bg); border-radius:18px; border:1px solid var(--border); overflow:hidden; animation:slideUp .45s ease both; }
+    .table-card-header { padding:16px 22px; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; }
+    .table-card-title { font-family:'Syne',sans-serif; font-size:.9rem; font-weight:700; color:var(--text-main); }
+
+    /* Filtres rôle */
+    .filter-tabs { display:flex; gap:6px; flex-wrap:wrap; }
+    .filter-tab { background:var(--bg); border:1px solid var(--border); border-radius:50px; padding:4px 14px; font-size:.75rem; font-weight:600; color:var(--text-muted); cursor:pointer; transition:all .15s; }
+    .filter-tab.active, .filter-tab:hover { background:rgba(79,142,247,.1); border-color:rgba(79,142,247,.3); color:var(--accent); }
+
+    .search-wrap { position:relative; }
+    .search-wrap input { background:var(--bg); border:1px solid var(--border); border-radius:8px; padding:7px 12px 7px 34px; font-size:.82rem; color:var(--text-main); outline:none; transition:border .18s; width:200px; }
+    .search-wrap input:focus { border-color:var(--accent); }
+    .search-wrap i { position:absolute; left:10px; top:50%; transform:translateY(-50%); color:var(--text-muted); font-size:.85rem; }
+
+    table { width:100%; border-collapse:collapse; }
+    thead th { padding:11px 18px; font-size:.71rem; font-weight:700; text-transform:uppercase; letter-spacing:.08em; color:var(--text-muted); background:#f8faff; border-bottom:1px solid var(--border); text-align:left; }
+    tbody tr { border-bottom:1px solid #f5f7fc; transition:background .15s; }
+    tbody tr:last-child { border-bottom:none; }
+    tbody tr:hover { background:#f8faff; }
+    tbody td { padding:12px 18px; font-size:.83rem; color:var(--text-main); vertical-align:middle; }
+
+    .user-info { display:flex; align-items:center; gap:10px; }
+    .user-avatar { width:34px; height:34px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:.75rem; font-weight:700; color:#fff; flex-shrink:0; }
+    .user-avatar img { width:34px; height:34px; border-radius:50%; object-fit:cover; }
+    .user-nom { font-weight:600; font-size:.83rem; }
+    .user-email { font-size:.74rem; color:var(--text-muted); margin-top:1px; }
+
+    .role-badge { display:inline-flex; align-items:center; gap:5px; border-radius:50px; padding:3px 10px; font-size:.72rem; font-weight:600; }
+    .role-citoyen     { background:rgba(56,217,169,.1);  color:var(--accent2); }
+    .role-admin       { background:rgba(247,147,79,.1);  color:var(--accent3); }
+    .role-superadmin  { background:rgba(167,139,250,.1); color:var(--accent5); }
+
+    .statut-badge { display:inline-flex; align-items:center; gap:4px; border-radius:50px; padding:3px 9px; font-size:.72rem; font-weight:600; }
+    .statut-actif   { background:rgba(56,217,169,.1); color:var(--accent2); }
+    .statut-inactif { background:rgba(247,111,142,.1); color:var(--accent4); }
+
+    .empty-state { padding:50px 24px; text-align:center; color:var(--text-muted); }
+    .empty-state i { font-size:2.5rem; opacity:.25; display:block; margin-bottom:12px; }
+
+    @keyframes slideUp { from{opacity:0;transform:translateY(18px)} to{opacity:1;transform:translateY(0)} }
+    @media(max-width:900px) { .stats-row { grid-template-columns:1fr 1fr; } }
+    @media(max-width:600px) { .stats-row { grid-template-columns:1fr; } thead th:nth-child(4),tbody td:nth-child(4) { display:none; } }
+</style>
+
+<div class="page-header">
+    <div class="page-header-left">
+        <h2><i class="bi bi-people me-2" style="color:var(--accent);"></i>Tous les Utilisateurs</h2>
+        <p>Vue d'ensemble de tous les comptes enregistrés sur la plateforme</p>
+    </div>
+</div>
+
+<!-- STATS -->
+<div class="stats-row">
+    <div class="stat-mini" style="animation-delay:.04s">
+        <div class="stat-mini-icon" style="background:rgba(79,142,247,.1); color:var(--accent);"><i class="bi bi-people"></i></div>
+        <div>
+            <div class="stat-mini-value" th:text="${utilisateurs != null ? utilisateurs.size() : 0}">0</div>
+            <div class="stat-mini-label">Total</div>
+        </div>
+    </div>
+    <div class="stat-mini" style="animation-delay:.08s">
+        <div class="stat-mini-icon" style="background:rgba(56,217,169,.1); color:var(--accent2);"><i class="bi bi-person-check"></i></div>
+        <div>
+            <div class="stat-mini-value" th:text="${utilisateurs != null ? utilisateurs.stream().filter(u -> u.valide).count() : 0}">0</div>
+            <div class="stat-mini-label">Actifs</div>
+        </div>
+    </div>
+    <div class="stat-mini" style="animation-delay:.12s">
+        <div class="stat-mini-icon" style="background:rgba(56,217,169,.1); color:var(--accent2);"><i class="bi bi-person-raised-hand"></i></div>
+        <div>
+            <div class="stat-mini-value"
+                 th:text="${utilisateurs != null ? utilisateurs.stream().filter(u -> u.role.name() == 'CITOYEN').count() : 0}">0</div>
+            <div class="stat-mini-label">Citoyens</div>
+        </div>
+    </div>
+    <div class="stat-mini" style="animation-delay:.16s">
+        <div class="stat-mini-icon" style="background:rgba(247,147,79,.1); color:var(--accent3);"><i class="bi bi-person-badge"></i></div>
+        <div>
+            <div class="stat-mini-value"
+                 th:text="${utilisateurs != null ? utilisateurs.stream().filter(u -> u.role.name() == 'ADMINISTRATEUR').count() : 0}">0</div>
+            <div class="stat-mini-label">Administrateurs</div>
+        </div>
+    </div>
+</div>
+
+<!-- TABLE -->
+<div class="table-card">
+    <div class="table-card-header">
+        <div class="filter-tabs">
+            <span class="filter-tab active" data-role="tous">Tous</span>
+            <span class="filter-tab" data-role="CITOYEN">Citoyens</span>
+            <span class="filter-tab" data-role="ADMINISTRATEUR">Admins</span>
+            <span class="filter-tab" data-role="SUPERADMIN">Super Admin</span>
+        </div>
+        <div class="search-wrap">
+            <i class="bi bi-search"></i>
+            <input type="text" id="searchInput" placeholder="Rechercher...">
+        </div>
+    </div>
+
+    <div th:if="${utilisateurs == null or utilisateurs.isEmpty()}" class="empty-state">
+        <i class="bi bi-people"></i>
+        <p>Aucun utilisateur enregistré.</p>
+    </div>
+
+    <div th:unless="${utilisateurs == null or utilisateurs.isEmpty()}">
+        <table id="usersTable">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Utilisateur</th>
+                    <th>Rôle</th>
+                    <th>Statut</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr th:each="user, stat : ${utilisateurs}"
+                    th:data-role="${user.role.name()}">
+                    <td style="color:var(--text-muted); font-size:.76rem;" th:text="${stat.index + 1}">1</td>
+                    <td>
+                        <div class="user-info">
+                            <div class="user-avatar"
+                                 th:style="${user.role.name() == 'CITOYEN' ? 'background:linear-gradient(135deg,#38d9a9,#4f8ef7)' : user.role.name() == 'ADMINISTRATEUR' ? 'background:linear-gradient(135deg,#f7934f,#f76f8e)' : 'background:linear-gradient(135deg,#a78bfa,#4f8ef7)'}">
+                                <img th:if="${user.photoPath != null}" th:src="@{${user.photoPath}}" alt="">
+                                <span th:unless="${user.photoPath != null}"
+                                      th:text="${#strings.substring(user.prenom,0,1).toUpperCase() + #strings.substring(user.nom,0,1).toUpperCase()}">U</span>
+                            </div>
+                            <div>
+                                <div class="user-nom" th:text="${user.prenom + ' ' + user.nom}">Nom</div>
+                                <div class="user-email" th:text="${user.email}">email</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td>
+                        <span th:switch="${user.role.name()}">
+                            <span th:case="'CITOYEN'"        class="role-badge role-citoyen"><i class="bi bi-person-raised-hand"></i> Citoyen</span>
+                            <span th:case="'ADMINISTRATEUR'" class="role-badge role-admin"><i class="bi bi-building"></i> Administrateur</span>
+                            <span th:case="'SUPERADMIN'"     class="role-badge role-superadmin"><i class="bi bi-shield-lock"></i> Super Admin</span>
+                        </span>
+                    </td>
+                    <td>
+                        <span th:if="${user.valide}"    class="statut-badge statut-actif"><i class="bi bi-check-circle-fill"></i> Actif</span>
+                        <span th:unless="${user.valide}" class="statut-badge statut-inactif"><i class="bi bi-clock"></i> En attente</span>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    // Filtre par rôle
+    document.querySelectorAll('.filter-tab').forEach(tab => {
+        tab.addEventListener('click', function() {
+            document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
+            this.classList.add('active');
+            const role = this.dataset.role;
+            document.querySelectorAll('#usersTable tbody tr').forEach(row => {
+                row.style.display = (role === 'tous' || row.dataset.role === role) ? '' : 'none';
+            });
+        });
+    });
+
+    // Recherche
+    document.getElementById('searchInput')?.addEventListener('input', function() {
+        const val = this.value.toLowerCase();
+        document.querySelectorAll('#usersTable tbody tr').forEach(row => {
+            row.style.display = row.textContent.toLowerCase().includes(val) ? '' : 'none';
+        });
+    });
+</script>
+</div>
+</body>
+</html>

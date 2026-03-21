@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+<div th:fragment="content">
+<style>
+    :root { --accent:#4f8ef7; --accent2:#38d9a9; --accent3:#f7934f; --accent4:#f76f8e; --bg:#f0f4fb; --card-bg:#fff; --text-main:#1a2236; --text-muted:#7b8fb5; --border:#e4eaf5; }
+    .page-header { margin-bottom:24px; }
+    .page-header h2 { font-family:'Syne',sans-serif; font-size:1.3rem; font-weight:800; color:var(--text-main); margin:0; }
+    .page-header p { font-size:.82rem; color:var(--text-muted); margin:4px 0 0; }
+    .form-card { background:var(--card-bg); border-radius:18px; border:1px solid var(--border); padding:28px; max-width:640px; animation:slideUp .4s ease both; }
+    .form-group { margin-bottom:18px; }
+    .form-label { display:block; font-size:.8rem; font-weight:600; color:var(--text-main); margin-bottom:6px; }
+    .form-label span { color:var(--accent4); }
+    .form-input { width:100%; background:var(--bg); border:1px solid var(--border); border-radius:10px; padding:10px 14px; font-size:.84rem; color:var(--text-main); outline:none; transition:border .18s; font-family:'DM Sans',sans-serif; }
+    .form-input:focus { border-color:var(--accent); box-shadow:0 0 0 3px rgba(79,142,247,.08); }
+    textarea.form-input { resize:vertical; min-height:90px; }
+
+    /* Photo actuelle */
+    .photo-preview { width:120px; height:120px; border-radius:14px; object-fit:cover; border:2px solid var(--border); display:block; margin-bottom:12px; }
+    .photo-placeholder { width:120px; height:120px; border-radius:14px; background:var(--bg); border:2px dashed var(--border); display:flex; align-items:center; justify-content:center; font-size:2rem; color:var(--text-muted); margin-bottom:12px; }
+
+    /* Upload zone */
+    .upload-zone { border:2px dashed var(--border); border-radius:12px; padding:20px; text-align:center; cursor:pointer; transition:all .18s; background:var(--bg); }
+    .upload-zone:hover { border-color:var(--accent); background:rgba(79,142,247,.04); }
+    .upload-zone i { font-size:1.5rem; color:var(--text-muted); display:block; margin-bottom:6px; }
+    .upload-zone p { font-size:.8rem; color:var(--text-muted); margin:0; }
+    .upload-zone p span { color:var(--accent); font-weight:600; }
+
+    .btn-save { background:var(--accent); color:#fff; border:none; border-radius:12px; padding:12px 28px; font-size:.88rem; font-weight:600; cursor:pointer; display:inline-flex; align-items:center; gap:8px; transition:background .18s; margin-top:8px; }
+    .btn-save:hover { background:#3a7de8; }
+    .info-note { background:rgba(79,142,247,.06); border-left:3px solid var(--accent); border-radius:0 10px 10px 0; padding:12px 16px; font-size:.8rem; color:var(--text-muted); margin-bottom:20px; line-height:1.6; }
+
+    @keyframes slideUp { from{opacity:0;transform:translateY(18px)} to{opacity:1;transform:translateY(0)} }
+</style>
+
+<div class="page-header">
+    <h2><i class="bi bi-building me-2" style="color:var(--accent);"></i>Profil de la mairie</h2>
+    <p>Complétez les informations de votre mairie visibles dans la vitrine publique</p>
+</div>
+
+<div class="form-card">
+    <div class="info-note">
+        <i class="bi bi-info-circle me-2"></i>
+        Ces informations sont affichées publiquement dans la vitrine de votre mairie.
+        Tous les champs sont optionnels et peuvent être complétés progressivement.
+    </div>
+
+    <form id="profilForm" enctype="multipart/form-data">
+        <input type="hidden" id="adminId" th:value="${currentUser?.id}">
+
+        <!-- Photo -->
+        <div class="form-group">
+            <label class="form-label">Photo de la mairie</label>
+            <img th:if="${mairie?.photoPath != null}" th:src="@{${mairie.photoPath}}"
+                 alt="" class="photo-preview" id="photoPreview">
+            <div th:unless="${mairie?.photoPath != null}" class="photo-placeholder" id="photoPlaceholder">
+                <i class="bi bi-building"></i>
+            </div>
+            <div class="upload-zone" onclick="document.getElementById('photoInput').click()">
+                <i class="bi bi-cloud-arrow-up"></i>
+                <p>Cliquez pour changer la photo — <span>JPG, PNG max 5Mo</span></p>
+                <input type="file" id="photoInput" name="photo" accept="image/*" style="display:none;">
+            </div>
+        </div>
+
+        <!-- Description -->
+        <div class="form-group">
+            <label class="form-label">Description</label>
+            <textarea id="description" class="form-input"
+                      placeholder="Présentez votre mairie en quelques lignes..."
+                      th:text="${mairie?.description}"></textarea>
+        </div>
+
+        <!-- Téléphone -->
+        <div class="form-group">
+            <label class="form-label">Téléphone officiel</label>
+            <input type="text" id="telephone" class="form-input"
+                   placeholder="Ex: +237 222 000 000"
+                   th:value="${mairie?.telephone}">
+        </div>
+
+        <!-- Email officiel -->
+        <div class="form-group">
+            <label class="form-label">Email officiel</label>
+            <input type="email" id="emailOfficiel" class="form-input"
+                   placeholder="Ex: contact@mairie.cm"
+                   th:value="${mairie?.emailOfficiel}">
+        </div>
+
+        <!-- Horaires -->
+        <div class="form-group">
+            <label class="form-label">Horaires d'ouverture</label>
+            <input type="text" id="horaires" class="form-input"
+                   placeholder="Ex: Lun-Ven 8h-16h, Sam 8h-12h"
+                   th:value="${mairie?.horaires}">
+        </div>
+
+        <button type="submit" class="btn-save">
+            <i class="bi bi-check2-circle"></i> Enregistrer
+        </button>
+    </form>
+</div>
+
+<!-- Toast -->
+<div id="toast" style="display:none;position:fixed;top:20px;right:20px;z-index:1000;background:#1a2236;color:#fff;padding:12px 20px;border-radius:12px;font-size:.84rem;">
+    <span id="toastMsg"></span>
+</div>
+
+<script>
+    // Aperçu photo
+    document.getElementById('photoInput').addEventListener('change', function() {
+        if (this.files[0]) {
+            const preview = document.getElementById('photoPreview') || document.getElementById('photoPlaceholder');
+            if (preview) {
+                const img = document.createElement('img');
+                img.src = URL.createObjectURL(this.files[0]);
+                img.className = 'photo-preview';
+                img.id = 'photoPreview';
+                preview.replaceWith(img);
+            }
+        }
+    });
+
+    function showToast(msg, ok = true) {
+        const t = document.getElementById('toast');
+        document.getElementById('toastMsg').textContent = msg;
+        t.style.background = ok ? '#1a2236' : '#f76f8e';
+        t.style.display = 'block';
+        setTimeout(() => t.style.display = 'none', 3000);
+    }
+
+    document.getElementById('profilForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        const adminId = document.getElementById('adminId').value;
+        const fd = new FormData();
+        fd.append('adminId',       adminId);
+        fd.append('description',   document.getElementById('description').value);
+        fd.append('telephone',     document.getElementById('telephone').value);
+        fd.append('emailOfficiel', document.getElementById('emailOfficiel').value);
+        fd.append('horaires',      document.getElementById('horaires').value);
+        const photo = document.getElementById('photoInput').files[0];
+        if (photo) fd.append('photo', photo);
+
+        try {
+            const res = await fetch(`/api/administrateur/vitrine/profil`, {
+                method: 'POST', body: fd
+            });
+            if (res.ok) showToast('Profil mis à jour !');
+            else showToast('Erreur lors de la sauvegarde.', false);
+        } catch { showToast('Erreur réseau.', false); }
+    });
+</script>
+</div>
+</body>
+</html>

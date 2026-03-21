@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+<div th:fragment="content">
+<style>
+    :root { --accent:#4f8ef7; --accent2:#38d9a9; --accent3:#f7934f; --accent4:#f76f8e; --bg:#f0f4fb; --card-bg:#fff; --text-main:#1a2236; --text-muted:#7b8fb5; --border:#e4eaf5; }
+    .page-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:24px; flex-wrap:wrap; gap:12px; }
+    .page-header-left h2 { font-family:'Syne',sans-serif; font-size:1.3rem; font-weight:800; color:var(--text-main); margin:0; }
+    .page-header-left p { font-size:.82rem; color:var(--text-muted); margin:4px 0 0; }
+    .btn-secondary-aspu { background:var(--bg); color:var(--text-main); border:1px solid var(--border); border-radius:10px; padding:9px 18px; font-size:.83rem; font-weight:500; text-decoration:none; display:inline-flex; align-items:center; gap:7px; transition:all .18s; }
+    .btn-secondary-aspu:hover { border-color:var(--accent); color:var(--accent); }
+
+    /* Infos signalement */
+    .signalement-info { background:var(--card-bg); border-radius:16px; border:1px solid var(--border); padding:20px 24px; margin-bottom:20px; display:flex; align-items:center; gap:14px; animation:slideUp .4s ease both; }
+    .signalement-info-icon { width:46px; height:46px; border-radius:12px; background:rgba(79,142,247,.1); color:var(--accent); display:flex; align-items:center; justify-content:center; font-size:1.2rem; flex-shrink:0; }
+    .signalement-titre { font-family:'Syne',sans-serif; font-weight:700; font-size:.95rem; color:var(--text-main); }
+    .signalement-meta { font-size:.78rem; color:var(--text-muted); margin-top:3px; }
+
+    /* Photos existantes */
+    .photos-card { background:var(--card-bg); border-radius:16px; border:1px solid var(--border); padding:22px 24px; margin-bottom:20px; animation:slideUp .45s ease both; }
+    .photos-card-title { font-family:'Syne',sans-serif; font-size:.88rem; font-weight:700; color:var(--text-main); margin-bottom:14px; }
+    .photos-grid { display:flex; flex-wrap:wrap; gap:10px; }
+    .photo-existing { width:90px; height:90px; border-radius:10px; object-fit:cover; border:1px solid var(--border); }
+    .no-photos { font-size:.82rem; color:var(--text-muted); font-style:italic; }
+
+    /* Upload */
+    .upload-card { background:var(--card-bg); border-radius:16px; border:1px solid var(--border); padding:22px 24px; animation:slideUp .5s ease both; }
+    .upload-zone { border:2px dashed var(--border); border-radius:12px; padding:32px; text-align:center; cursor:pointer; transition:all .18s; background:var(--bg); }
+    .upload-zone:hover,.upload-zone.drag-over { border-color:var(--accent); background:rgba(79,142,247,.04); }
+    .upload-zone i { font-size:2rem; color:var(--text-muted); display:block; margin-bottom:10px; }
+    .upload-zone p { font-size:.83rem; color:var(--text-muted); margin:0; }
+    .upload-zone p span { color:var(--accent); font-weight:600; }
+    .photos-preview { display:flex; flex-wrap:wrap; gap:10px; margin-top:14px; }
+    .photo-thumb { position:relative; width:90px; height:90px; border-radius:10px; overflow:hidden; border:1px solid var(--border); }
+    .photo-thumb img { width:100%; height:100%; object-fit:cover; }
+    .photo-thumb button { position:absolute; top:4px; right:4px; background:rgba(0,0,0,.5); color:#fff; border:none; border-radius:50%; width:20px; height:20px; cursor:pointer; font-size:.7rem; display:flex; align-items:center; justify-content:center; }
+    .form-actions { display:flex; gap:10px; margin-top:20px; padding-top:18px; border-top:1px solid var(--border); flex-wrap:wrap; }
+    .btn-submit { background:var(--accent); color:#fff; border:none; border-radius:10px; padding:12px 28px; font-size:.88rem; font-weight:600; cursor:pointer; transition:background .18s,transform .18s; display:inline-flex; align-items:center; gap:8px; }
+    .btn-submit:hover { background:#3a7de8; transform:translateY(-2px); }
+    .btn-submit:disabled { opacity:.6; cursor:not-allowed; transform:none; }
+
+    @keyframes slideUp { from{opacity:0;transform:translateY(18px)} to{opacity:1;transform:translateY(0)} }
+    @keyframes spin { to{transform:rotate(360deg);} }
+</style>
+
+<div class="page-header">
+    <div class="page-header-left">
+        <h2><i class="bi bi-camera-plus me-2" style="color:var(--accent);"></i>Ajouter des photos</h2>
+        <p>Ajoutez des photos supplémentaires à votre signalement</p>
+    </div>
+    <a th:href="@{/citoyen/mes-signalements}" class="btn-secondary-aspu">
+        <i class="bi bi-arrow-left"></i> Mes signalements
+    </a>
+</div>
+
+<!-- Infos du signalement -->
+<div class="signalement-info" th:if="${probleme != null}">
+    <div class="signalement-info-icon"><i class="bi bi-exclamation-circle"></i></div>
+    <div>
+        <div class="signalement-titre" th:text="${probleme.titre}">Titre</div>
+        <div class="signalement-meta">
+            <span th:text="${probleme.quartier}">Quartier</span> ·
+            <span th:text="${#temporals.format(probleme.dateSignalement, 'dd/MM/yyyy')}">Date</span>
+        </div>
+    </div>
+</div>
+
+<!-- Photos existantes -->
+<div class="photos-card">
+    <div class="photos-card-title"><i class="bi bi-images me-2"></i>Photos déjà ajoutées</div>
+    <div class="photos-grid" th:if="${probleme?.photos != null and !probleme.photos.isEmpty()}">
+        <img th:each="photo : ${probleme.photos}"
+             class="photo-existing"
+             th:src="@{${photo.chemin}}"
+             alt="Photo">
+    </div>
+    <p class="no-photos" th:if="${probleme?.photos == null or probleme.photos.isEmpty()}">
+        Aucune photo pour le moment.
+    </p>
+</div>
+
+<!-- Upload nouvelles photos -->
+<div class="upload-card">
+    <div class="upload-zone" id="uploadZone" onclick="document.getElementById('photosInput').click()">
+        <i class="bi bi-cloud-arrow-up"></i>
+        <p>Glissez vos photos ici ou <span>cliquez pour sélectionner</span></p>
+        <p style="font-size:.74rem;margin-top:6px;">JPG, PNG — max 2 Mo par photo</p>
+        <input type="file" id="photosInput" multiple accept="image/*" style="display:none;">
+    </div>
+    <div class="photos-preview" id="photosPreview"></div>
+
+    <div class="form-actions">
+        <button class="btn-submit" id="submitBtn" onclick="ajouterPhotos()" disabled>
+            <i class="bi bi-cloud-upload"></i> Envoyer les photos
+            <span id="spinner" class="d-none" style="width:14px;height:14px;border:2px solid rgba(255,255,255,.4);border-top-color:#fff;border-radius:50%;display:inline-block;animation:spin .7s linear infinite;"></span>
+        </button>
+        <a th:href="@{/citoyen/mes-signalements}" class="btn-secondary-aspu">Annuler</a>
+    </div>
+</div>
+
+<div id="toast" style="display:none;position:fixed;top:20px;right:20px;z-index:1000;background:#1a2236;color:#fff;padding:12px 20px;border-radius:12px;font-size:.84rem;box-shadow:0 8px 24px rgba(0,0,0,.2);"><span id="toastMsg"></span></div>
+
+<script th:inline="javascript">
+    const problemeId = /*[[${probleme?.id}]]*/ null;
+    let selectedFiles = [];
+
+    const uploadZone  = document.getElementById('uploadZone');
+    const photosInput = document.getElementById('photosInput');
+
+    uploadZone.addEventListener('dragover', e => { e.preventDefault(); uploadZone.classList.add('drag-over'); });
+    uploadZone.addEventListener('dragleave', () => uploadZone.classList.remove('drag-over'));
+    uploadZone.addEventListener('drop', e => { e.preventDefault(); uploadZone.classList.remove('drag-over'); addFiles([...e.dataTransfer.files]); });
+    photosInput.addEventListener('change', () => addFiles([...photosInput.files]));
+
+    function addFiles(files) {
+        files.filter(f => f.type.startsWith('image/')).forEach(f => {
+            if (!selectedFiles.find(sf => sf.name === f.name)) selectedFiles.push(f);
+        });
+        renderPreviews();
+    }
+
+    function renderPreviews() {
+        const preview = document.getElementById('photosPreview');
+        preview.innerHTML = '';
+        selectedFiles.forEach((f, i) => {
+            const div = document.createElement('div');
+            div.className = 'photo-thumb';
+            div.innerHTML = `<img src="${URL.createObjectURL(f)}" alt=""><button type="button" onclick="removePhoto(${i})">×</button>`;
+            preview.appendChild(div);
+        });
+        document.getElementById('submitBtn').disabled = selectedFiles.length === 0;
+    }
+
+    function removePhoto(i) { selectedFiles.splice(i, 1); renderPreviews(); }
+
+    function showToast(msg, ok=true) {
+        const t = document.getElementById('toast');
+        document.getElementById('toastMsg').textContent = msg;
+        t.style.background = ok ? '#1a2236' : '#f76f8e';
+        t.style.display = 'block';
+        setTimeout(() => t.style.display = 'none', 3500);
+    }
+
+    async function ajouterPhotos() {
+        if (!selectedFiles.length || !problemeId) return;
+        const btn = document.getElementById('submitBtn');
+        const spinner = document.getElementById('spinner');
+        btn.disabled = true; spinner.classList.remove('d-none');
+
+        const fd = new FormData();
+        selectedFiles.forEach(f => fd.append('photos', f));
+
+        try {
+            const res = await fetch(`/api/citoyens/problemes/${problemeId}/photos`, { method:'POST', body:fd });
+            if (res.ok) { showToast('Photos ajoutées avec succès !'); setTimeout(() => window.location.href = '/citoyen/mes-signalements', 1500); }
+            else showToast('Erreur : ' + await res.text(), false);
+        } catch { showToast('Erreur réseau.', false); }
+
+        btn.disabled = false; spinner.classList.add('d-none');
+    }
+</script>
+</div>
+</body>
+</html>

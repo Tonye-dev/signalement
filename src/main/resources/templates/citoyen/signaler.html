@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+<div th:fragment="content">
+<style>
+    :root { --accent:#4f8ef7; --accent2:#38d9a9; --accent3:#f7934f; --accent4:#f76f8e; --bg:#f0f4fb; --card-bg:#fff; --text-main:#1a2236; --text-muted:#7b8fb5; --border:#e4eaf5; }
+
+    .page-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:24px; flex-wrap:wrap; gap:12px; }
+    .page-header-left h2 { font-family:'Syne',sans-serif; font-size:1.3rem; font-weight:800; color:var(--text-main); margin:0; }
+    .page-header-left p { font-size:.82rem; color:var(--text-muted); margin:4px 0 0; }
+    .btn-secondary-aspu { background:var(--bg); color:var(--text-main); border:1px solid var(--border); border-radius:10px; padding:9px 18px; font-size:.83rem; font-weight:500; text-decoration:none; display:inline-flex; align-items:center; gap:7px; transition:all .18s; }
+    .btn-secondary-aspu:hover { border-color:var(--accent); color:var(--accent); }
+
+    .form-layout { display:grid; grid-template-columns:1fr 340px; gap:20px; align-items:start; }
+
+    .form-card { background:var(--card-bg); border-radius:18px; border:1px solid var(--border); padding:28px 32px; animation:slideUp .45s ease both; }
+    .form-section-title { font-family:'Syne',sans-serif; font-size:.78rem; font-weight:700; letter-spacing:.1em; text-transform:uppercase; color:var(--text-muted); margin-bottom:16px; margin-top:24px; padding-top:20px; border-top:1px solid var(--border); }
+    .form-section-title:first-child { margin-top:0; padding-top:0; border-top:none; }
+
+    .form-group { margin-bottom:18px; }
+    .form-label { display:block; font-size:.8rem; font-weight:600; color:var(--text-main); margin-bottom:7px; }
+    .form-label span { color:var(--accent4); margin-left:2px; }
+    .form-input { width:100%; background:var(--bg); border:1px solid var(--border); border-radius:10px; padding:11px 14px; font-size:.85rem; color:var(--text-main); outline:none; transition:border .18s,box-shadow .18s; font-family:'DM Sans',sans-serif; }
+    .form-input:focus { border-color:var(--accent); box-shadow:0 0 0 3px rgba(79,142,247,.08); }
+    .form-input::placeholder { color:var(--text-muted); }
+    textarea.form-input { resize:vertical; min-height:110px; }
+    select.form-input { cursor:pointer; }
+
+    /* Upload photos */
+    .upload-zone { border:2px dashed var(--border); border-radius:12px; padding:28px 20px; text-align:center; cursor:pointer; transition:all .2s; background:var(--bg); }
+    .upload-zone:hover, .upload-zone.drag-over { border-color:var(--accent); background:rgba(79,142,247,.04); }
+    .upload-zone i { font-size:2rem; color:var(--text-muted); margin-bottom:10px; display:block; }
+    .upload-zone p { font-size:.83rem; color:var(--text-muted); margin:0; }
+    .upload-zone strong { color:var(--accent); }
+    #photoInput { display:none; }
+
+    .photos-preview { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-top:12px; }
+    .preview-item { position:relative; border-radius:10px; overflow:hidden; aspect-ratio:1; }
+    .preview-item img { width:100%; height:100%; object-fit:cover; }
+    .preview-remove { position:absolute; top:4px; right:4px; background:rgba(0,0,0,.6); color:#fff; border:none; border-radius:50%; width:22px; height:22px; font-size:.75rem; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:background .15s; }
+    .preview-remove:hover { background:var(--accent4); }
+
+    /* Carte résumé */
+    .summary-card { background:var(--card-bg); border-radius:18px; border:1px solid var(--border); padding:22px; animation:slideUp .45s ease .1s both; position:sticky; top:80px; }
+    .summary-title { font-family:'Syne',sans-serif; font-size:.88rem; font-weight:700; color:var(--text-main); margin-bottom:16px; display:flex; align-items:center; gap:7px; }
+    .summary-title i { color:var(--accent); }
+    .summary-row { display:flex; justify-content:space-between; align-items:flex-start; padding:8px 0; border-bottom:1px solid #f5f7fc; font-size:.82rem; gap:10px; }
+    .summary-row:last-child { border-bottom:none; }
+    .summary-label { color:var(--text-muted); flex-shrink:0; }
+    .summary-value { color:var(--text-main); font-weight:600; text-align:right; }
+
+    .statut-pill { display:inline-flex; align-items:center; gap:5px; background:rgba(247,147,79,.1); color:var(--accent3); border-radius:50px; padding:3px 10px; font-size:.75rem; font-weight:600; }
+
+    .btn-submit { width:100%; background:var(--accent); color:#fff; border:none; border-radius:12px; padding:13px; font-size:.9rem; font-weight:600; cursor:pointer; transition:background .18s,transform .18s; display:flex; align-items:center; justify-content:center; gap:8px; margin-top:16px; }
+    .btn-submit:hover { background:#3a7de8; transform:translateY(-2px); }
+    .btn-submit:disabled { background:#b0bece; cursor:not-allowed; transform:none; }
+
+    @keyframes slideUp { from{opacity:0;transform:translateY(18px)} to{opacity:1;transform:translateY(0)} }
+    @keyframes spin { to { transform:rotate(360deg); } }
+
+    @media(max-width:900px) { .form-layout { grid-template-columns:1fr; } .summary-card { position:static; } }
+</style>
+
+<div class="page-header">
+    <div class="page-header-left">
+        <h2><i class="bi bi-megaphone me-2" style="color:var(--accent);"></i>Signaler un problème</h2>
+        <p>Décrivez le problème constaté dans votre quartier</p>
+    </div>
+    <a th:href="@{/citoyen/dashboard}" class="btn-secondary-aspu">
+        <i class="bi bi-arrow-left"></i> Retour
+    </a>
+</div>
+
+<div class="form-layout">
+
+    <!-- FORMULAIRE -->
+    <div class="form-card">
+
+        <div class="form-section-title">Informations du signalement</div>
+
+        <div class="form-group">
+            <label class="form-label">Titre <span>*</span></label>
+            <input type="text" id="titre" class="form-input"
+                   placeholder="Ex: Nid de poule dangereux devant l'école" required>
+        </div>
+
+        <div class="form-group">
+            <label class="form-label">Description <span>*</span></label>
+            <textarea id="description" class="form-input"
+                      placeholder="Décrivez le problème en détail : localisation précise, dangerosité, depuis quand..." required></textarea>
+        </div>
+
+        <div class="form-group">
+            <label class="form-label">Type de problème <span>*</span></label>
+            <select id="typeProblemeId" class="form-input" required onchange="updateSummary()">
+                <option value="">-- Sélectionner un type --</option>
+                <option th:each="type : ${typesProblemes}"
+                        th:value="${type.id}"
+                        th:text="${type.nomType}">Type</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label class="form-label">Localisation (quartier) <span>*</span></label>
+            <input type="text" id="localisation" class="form-input"
+                   placeholder="Ex: Bastos, Nlongkak, Omnisport..." required oninput="updateSummary()">
+        </div>
+
+        <div class="form-section-title">Photos (optionnel)</div>
+
+        <div class="upload-zone" id="uploadZone" onclick="document.getElementById('photoInput').click()">
+            <i class="bi bi-cloud-arrow-up"></i>
+            <p>Glissez vos photos ici ou <strong>cliquez pour sélectionner</strong></p>
+            <p style="font-size:.75rem; margin-top:6px;">JPG, PNG — max 2 Mo par photo</p>
+        </div>
+        <input type="file" id="photoInput" multiple accept="image/*">
+        <div class="photos-preview" id="photosPreview"></div>
+
+        <div style="margin-top:24px; padding-top:20px; border-top:1px solid var(--border);">
+            <button type="button" class="btn-submit" id="submitBtn" onclick="soumettre()">
+                <i class="bi bi-send"></i> Envoyer le signalement
+                <span id="spinner" style="display:none; width:16px; height:16px; border:2px solid rgba(255,255,255,.4); border-top-color:#fff; border-radius:50%; animation:spin .7s linear infinite;"></span>
+            </button>
+        </div>
+
+    </div>
+
+    <!-- RÉSUMÉ -->
+    <div class="summary-card">
+        <div class="summary-title"><i class="bi bi-clipboard-check"></i> Résumé</div>
+        <div class="summary-row">
+            <span class="summary-label">Statut initial</span>
+            <span class="statut-pill"><i class="bi bi-flag"></i> Signalé</span>
+        </div>
+        <div class="summary-row">
+            <span class="summary-label">Type</span>
+            <span class="summary-value" id="summaryType">—</span>
+        </div>
+        <div class="summary-row">
+            <span class="summary-label">Localisation</span>
+            <span class="summary-value" id="summaryLoc">—</span>
+        </div>
+        <div class="summary-row">
+            <span class="summary-label">Photos</span>
+            <span class="summary-value" id="summaryPhotos">0 photo(s)</span>
+        </div>
+        <div class="summary-row">
+            <span class="summary-label">Date</span>
+            <span class="summary-value" id="summaryDate">—</span>
+        </div>
+    </div>
+
+</div>
+
+<!-- Toast -->
+<div id="toast" style="display:none;position:fixed;bottom:24px;right:24px;z-index:1000;background:#1a2236;color:#fff;padding:14px 22px;border-radius:12px;font-size:.84rem;box-shadow:0 8px 24px rgba(0,0,0,.2);">
+    <span id="toastMsg"></span>
+</div>
+
+<script th:inline="javascript">
+    // ID du citoyen connecté injecté par Thymeleaf
+    const citoyenId = /*[[${currentUser.id}]]*/ null;
+
+    // Date du jour
+    document.getElementById('summaryDate').textContent =
+        new Date().toLocaleDateString('fr-FR', { day:'numeric', month:'long', year:'numeric' });
+
+    // Mise à jour résumé
+    function updateSummary() {
+        const typeSelect = document.getElementById('typeProblemeId');
+        const typeText = typeSelect.options[typeSelect.selectedIndex]?.text || '—';
+        const loc = document.getElementById('localisation').value || '—';
+        document.getElementById('summaryType').textContent = typeText === '-- Sélectionner un type --' ? '—' : typeText;
+        document.getElementById('summaryLoc').textContent = loc;
+    }
+
+    document.getElementById('titre').addEventListener('input', updateSummary);
+    document.getElementById('description').addEventListener('input', updateSummary);
+    document.getElementById('typeProblemeId').addEventListener('change', updateSummary);
+
+    // Gestion photos
+    let selectedFiles = [];
+
+    document.getElementById('photoInput').addEventListener('change', function() {
+        [...this.files].forEach(addPhoto);
+        this.value = '';
+    });
+
+    // Drag & drop
+    const zone = document.getElementById('uploadZone');
+    zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('drag-over'); });
+    zone.addEventListener('dragleave', () => zone.classList.remove('drag-over'));
+    zone.addEventListener('drop', e => {
+        e.preventDefault();
+        zone.classList.remove('drag-over');
+        [...e.dataTransfer.files].filter(f => f.type.startsWith('image/')).forEach(addPhoto);
+    });
+
+    function addPhoto(file) {
+        if (selectedFiles.length >= 5) { showToast('Maximum 5 photos.', false); return; }
+        if (file.size > 2 * 1024 * 1024) { showToast(`${file.name} dépasse 2 Mo.`, false); return; }
+        selectedFiles.push(file);
+        const reader = new FileReader();
+        reader.onload = e => {
+            const div = document.createElement('div');
+            div.className = 'preview-item';
+            div.dataset.index = selectedFiles.length - 1;
+            div.innerHTML = `<img src="${e.target.result}">
+                <button class="preview-remove" onclick="removePhoto(${selectedFiles.length - 1})">×</button>`;
+            document.getElementById('photosPreview').appendChild(div);
+            document.getElementById('summaryPhotos').textContent = selectedFiles.length + ' photo(s)';
+        };
+        reader.readAsDataURL(file);
+    }
+
+    function removePhoto(index) {
+        selectedFiles.splice(index, 1);
+        renderPreviews();
+    }
+
+    function renderPreviews() {
+        const wrap = document.getElementById('photosPreview');
+        wrap.innerHTML = '';
+        selectedFiles.forEach((file, i) => {
+            const reader = new FileReader();
+            reader.onload = e => {
+                const div = document.createElement('div');
+                div.className = 'preview-item';
+                div.innerHTML = `<img src="${e.target.result}">
+                    <button class="preview-remove" onclick="removePhoto(${i})">×</button>`;
+                wrap.appendChild(div);
+            };
+            reader.readAsDataURL(file);
+        });
+        document.getElementById('summaryPhotos').textContent = selectedFiles.length + ' photo(s)';
+    }
+
+    // Soumission
+    async function soumettre() {
+        const titre       = document.getElementById('titre').value.trim();
+        const description = document.getElementById('description').value.trim();
+        const localisation= document.getElementById('localisation').value.trim();
+        const typeId      = document.getElementById('typeProblemeId').value;
+
+        if (!titre || !description || !localisation || !typeId) {
+            showToast('Veuillez remplir tous les champs obligatoires.', false); return;
+        }
+        if (!citoyenId) {
+            showToast('Session expirée, veuillez vous reconnecter.', false); return;
+        }
+
+        const btn = document.getElementById('submitBtn');
+        const spinner = document.getElementById('spinner');
+        btn.disabled = true;
+        spinner.style.display = 'inline-block';
+
+        const formData = new FormData();
+        formData.append('titre', titre);
+        formData.append('description', description);
+        formData.append('localisation', localisation);
+        formData.append('typeProblemeId', typeId);
+        selectedFiles.forEach(f => formData.append('photos', f));
+
+        try {
+            const res = await fetch(`/api/citoyens/${citoyenId}/problemes`, {
+                method: 'POST',
+                body: formData
+            });
+
+            if (res.ok) {
+                showToast('Signalement envoyé avec succès !');
+                setTimeout(() => window.location.href = '/citoyen/mes-signalements', 1600);
+            } else {
+                const err = await res.text();
+                showToast('Erreur : ' + err, false);
+            }
+        } catch(e) {
+            showToast('Erreur réseau. Veuillez réessayer.', false);
+        }
+
+        btn.disabled = false;
+        spinner.style.display = 'none';
+    }
+
+    function showToast(msg, ok = true) {
+        const t = document.getElementById('toast');
+        document.getElementById('toastMsg').textContent = msg;
+        t.style.background = ok ? '#1a2236' : '#f76f8e';
+        t.style.display = 'block';
+        setTimeout(() => t.style.display = 'none', 4000);
+    }
+</script>
+</div>
+</body>
+</html>

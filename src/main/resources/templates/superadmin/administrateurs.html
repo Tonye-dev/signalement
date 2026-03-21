@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+<div th:fragment="content">
+<style>
+    :root { --accent:#4f8ef7; --accent2:#38d9a9; --accent3:#f7934f; --accent4:#f76f8e; --bg:#f0f4fb; --card-bg:#fff; --text-main:#1a2236; --text-muted:#7b8fb5; --border:#e4eaf5; }
+    .page-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:24px; flex-wrap:wrap; gap:12px; }
+    .page-header-left h2 { font-family:'Syne',sans-serif; font-size:1.3rem; font-weight:800; color:var(--text-main); margin:0; }
+    .page-header-left p { font-size:.82rem; color:var(--text-muted); margin:4px 0 0; }
+    .btn-primary-aspu { background:var(--accent); color:#fff; border:none; border-radius:10px; padding:10px 20px; font-size:.84rem; font-weight:600; text-decoration:none; display:inline-flex; align-items:center; gap:7px; transition:background .18s,transform .18s; cursor:pointer; }
+    .btn-primary-aspu:hover { background:#3a7de8; color:#fff; transform:translateY(-2px); }
+    .btn-secondary-aspu { background:var(--bg); color:var(--text-main); border:1px solid var(--border); border-radius:10px; padding:9px 18px; font-size:.83rem; font-weight:500; text-decoration:none; display:inline-flex; align-items:center; gap:7px; transition:all .18s; }
+    .btn-secondary-aspu:hover { border-color:var(--accent); color:var(--accent); }
+    .table-card { background:var(--card-bg); border-radius:18px; border:1px solid var(--border); overflow:hidden; animation:slideUp .45s ease both; }
+    .table-card-header { padding:18px 24px; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; }
+    .table-card-title { font-family:'Syne',sans-serif; font-size:.9rem; font-weight:700; color:var(--text-main); }
+    .search-wrap { position:relative; }
+    .search-wrap input { background:var(--bg); border:1px solid var(--border); border-radius:8px; padding:7px 12px 7px 34px; font-size:.82rem; color:var(--text-main); outline:none; transition:border .18s; width:220px; }
+    .search-wrap input:focus { border-color:var(--accent); }
+    .search-wrap i { position:absolute; left:10px; top:50%; transform:translateY(-50%); color:var(--text-muted); font-size:.85rem; }
+    table { width:100%; border-collapse:collapse; }
+    thead th { padding:12px 20px; font-size:.72rem; font-weight:700; text-transform:uppercase; letter-spacing:.08em; color:var(--text-muted); background:#f8faff; border-bottom:1px solid var(--border); text-align:left; }
+    tbody tr { border-bottom:1px solid #f5f7fc; transition:background .15s; }
+    tbody tr:last-child { border-bottom:none; }
+    tbody tr:hover { background:#f8faff; }
+    tbody td { padding:14px 20px; font-size:.84rem; color:var(--text-main); vertical-align:middle; }
+
+    /* Avatar */
+    .user-avatar { width:36px; height:36px; border-radius:50%; background:linear-gradient(135deg,#f7934f,#f76f8e); display:flex; align-items:center; justify-content:center; font-size:.8rem; font-weight:700; color:#fff; flex-shrink:0; }
+    .user-avatar img { width:36px; height:36px; border-radius:50%; object-fit:cover; }
+    .user-info { display:flex; align-items:center; gap:11px; }
+    .user-nom { font-weight:600; }
+    .user-email { font-size:.75rem; color:var(--text-muted); margin-top:2px; }
+
+    .mairie-badge { display:inline-flex; align-items:center; gap:5px; background:rgba(79,142,247,.08); color:var(--accent); border:1px solid rgba(79,142,247,.15); border-radius:50px; padding:3px 10px; font-size:.74rem; font-weight:500; }
+
+    .statut-badge { display:inline-flex; align-items:center; gap:5px; border-radius:50px; padding:3px 10px; font-size:.73rem; font-weight:600; }
+    .statut-actif { background:rgba(56,217,169,.1); color:var(--accent2); }
+    .statut-inactif { background:rgba(247,111,142,.1); color:var(--accent4); }
+
+    .action-btn { background:none; border:1px solid var(--border); border-radius:7px; padding:5px 10px; font-size:.8rem; color:var(--text-muted); cursor:pointer; transition:all .15s; text-decoration:none; display:inline-flex; align-items:center; gap:5px; }
+    .action-btn:hover { border-color:var(--accent); color:var(--accent); background:rgba(79,142,247,.06); }
+
+    .empty-state { padding:60px 24px; text-align:center; color:var(--text-muted); }
+    .empty-state i { font-size:2.5rem; opacity:.25; display:block; margin-bottom:12px; }
+
+    @keyframes slideUp { from{opacity:0;transform:translateY(18px)} to{opacity:1;transform:translateY(0)} }
+</style>
+
+<div class="page-header">
+    <div class="page-header-left">
+        <h2><i class="bi bi-person-badge me-2" style="color:var(--accent);"></i>Gestion des Administrateurs</h2>
+        <p>Liste de tous les administrateurs municipaux enregistrés</p>
+    </div>
+    <a th:href="@{/superadmin/administrateurs/ajouter}" class="btn-primary-aspu">
+        <i class="bi bi-person-plus"></i> Ajouter un administrateur
+    </a>
+</div>
+
+<div class="table-card">
+    <div class="table-card-header">
+        <span class="table-card-title">
+            <span th:text="${administrateurs != null ? administrateurs.size() : 0}">0</span> administrateur(s)
+        </span>
+        <div class="search-wrap">
+            <i class="bi bi-search"></i>
+            <input type="text" id="searchInput" placeholder="Rechercher...">
+        </div>
+    </div>
+
+    <div th:if="${administrateurs == null or administrateurs.isEmpty()}" class="empty-state">
+        <i class="bi bi-person-badge"></i>
+        <p>Aucun administrateur enregistré.</p>
+        <a th:href="@{/superadmin/administrateurs/ajouter}" class="btn-primary-aspu" style="margin-top:16px; display:inline-flex;">
+            <i class="bi bi-person-plus"></i> Ajouter le premier administrateur
+        </a>
+    </div>
+
+    <div th:unless="${administrateurs == null or administrateurs.isEmpty()}">
+        <table id="adminsTable">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Administrateur</th>
+                    <th>Mairie</th>
+                    <th>Statut</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr th:each="admin, stat : ${administrateurs}">
+                    <td style="color:var(--text-muted); font-size:.78rem;" th:text="${stat.index + 1}">1</td>
+                    <td>
+                        <div class="user-info">
+                            <div class="user-avatar">
+                                <img th:if="${admin.photoPath != null}" th:src="@{${admin.photoPath}}" alt="">
+                                <span th:unless="${admin.photoPath != null}"
+                                      th:text="${admin.prenom?.substring(0,1)?.toUpperCase() + admin.nom?.substring(0,1)?.toUpperCase()}">AD</span>
+                            </div>
+                            <div>
+                                <div class="user-nom" th:text="${admin.prenom + ' ' + admin.nom}">Nom</div>
+                                <div class="user-email" th:text="${admin.email}">email</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td>
+                        <span class="mairie-badge" th:if="${admin.mairie != null}">
+                            <i class="bi bi-building"></i>
+                            <span th:text="${admin.mairie.nom}">Mairie</span>
+                        </span>
+                        <span th:unless="${admin.mairie != null}" style="color:var(--text-muted); font-size:.78rem;">—</span>
+                    </td>
+                    <td>
+                        <span th:if="${admin.valide}" class="statut-badge statut-actif">
+                            <i class="bi bi-check-circle-fill"></i> Actif
+                        </span>
+                        <span th:unless="${admin.valide}" class="statut-badge statut-inactif">
+                            <i class="bi bi-x-circle-fill"></i> Inactif
+                        </span>
+                    </td>
+                    <td>
+                        <a th:href="@{/superadmin/mairies/{id}/administrateurs/ajouter(id=${admin.mairie?.id})}"
+                           class="action-btn">
+                            <i class="bi bi-arrow-left-right"></i> Changer de mairie
+                        </a>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    document.getElementById('searchInput')?.addEventListener('input', function() {
+        const val = this.value.toLowerCase();
+        document.querySelectorAll('#adminsTable tbody tr').forEach(row => {
+            row.style.display = row.textContent.toLowerCase().includes(val) ? '' : 'none';
+        });
+    });
+</script>
+</div>
+</body>
+</html>

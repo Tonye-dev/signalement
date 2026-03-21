@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+<div th:fragment="content">
+<style>
+    :root { --accent:#4f8ef7; --accent2:#38d9a9; --accent3:#f7934f; --accent4:#f76f8e; --bg:#f0f4fb; --card-bg:#fff; --text-main:#1a2236; --text-muted:#7b8fb5; --border:#e4eaf5; }
+    .page-header { margin-bottom:24px; }
+    .page-header h2 { font-family:'Syne',sans-serif; font-size:1.3rem; font-weight:800; color:var(--text-main); margin:0; }
+    .content-grid { display:grid; grid-template-columns:1fr 340px; gap:20px; align-items:start; }
+    .services-list { display:flex; flex-direction:column; gap:12px; }
+    .service-item { background:var(--card-bg); border-radius:14px; border:1px solid var(--border); padding:16px 18px; display:flex; align-items:center; gap:14px; animation:slideUp .4s ease both; transition:box-shadow .2s; }
+    .service-item:hover { box-shadow:0 6px 18px rgba(0,0,0,.07); }
+    .service-icon { width:40px; height:40px; border-radius:10px; background:rgba(79,142,247,.1); color:var(--accent); display:flex; align-items:center; justify-content:center; font-size:1rem; flex-shrink:0; }
+    .service-info { flex:1; }
+    .service-nom { font-weight:600; font-size:.88rem; color:var(--text-main); }
+    .service-desc { font-size:.76rem; color:var(--text-muted); margin-top:2px; }
+    .btn-del { background:none; border:1px solid var(--border); border-radius:8px; padding:5px 10px; font-size:.78rem; color:var(--text-muted); cursor:pointer; transition:all .15s; }
+    .btn-del:hover { border-color:var(--accent4); color:var(--accent4); }
+    .form-card { background:var(--card-bg); border-radius:18px; border:1px solid var(--border); padding:24px; position:sticky; top:80px; animation:slideUp .4s ease .1s both; }
+    .form-card-title { font-family:'Syne',sans-serif; font-size:.88rem; font-weight:700; color:var(--text-main); margin-bottom:16px; display:flex; align-items:center; gap:7px; }
+    .form-card-title i { color:var(--accent); }
+    .form-group { margin-bottom:14px; }
+    .form-label { display:block; font-size:.79rem; font-weight:600; color:var(--text-main); margin-bottom:5px; }
+    .form-input { width:100%; background:var(--bg); border:1px solid var(--border); border-radius:10px; padding:9px 13px; font-size:.83rem; color:var(--text-main); outline:none; transition:border .18s; font-family:'DM Sans',sans-serif; }
+    .form-input:focus { border-color:var(--accent); }
+    textarea.form-input { resize:vertical; min-height:70px; }
+    .icones-grid { display:flex; flex-wrap:wrap; gap:6px; margin-bottom:4px; }
+    .icone-btn { width:34px; height:34px; border-radius:8px; background:var(--bg); border:1px solid var(--border); display:flex; align-items:center; justify-content:center; cursor:pointer; transition:all .15s; color:var(--text-muted); }
+    .icone-btn:hover, .icone-btn.selected { background:rgba(79,142,247,.1); border-color:var(--accent); color:var(--accent); }
+    .btn-ajouter { width:100%; background:var(--accent); color:#fff; border:none; border-radius:10px; padding:11px; font-size:.86rem; font-weight:600; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:7px; margin-top:6px; transition:background .18s; }
+    .btn-ajouter:hover { background:#3a7de8; }
+    .empty-list { padding:40px; text-align:center; color:var(--text-muted); background:var(--card-bg); border-radius:14px; border:1px solid var(--border); }
+    .empty-list i { font-size:2rem; opacity:.2; display:block; margin-bottom:10px; }
+    @keyframes slideUp { from{opacity:0;transform:translateY(18px)} to{opacity:1;transform:translateY(0)} }
+    @media(max-width:900px) { .content-grid { grid-template-columns:1fr; } .form-card { position:static; } }
+</style>
+
+<div class="page-header">
+    <h2><i class="bi bi-grid-3x3-gap me-2" style="color:var(--accent);"></i>Gestion des services</h2>
+    <p style="font-size:.82rem;color:var(--text-muted);margin:4px 0 0;">Services affichés dans la vitrine publique de votre mairie</p>
+</div>
+
+<div class="content-grid">
+    <div>
+        <div th:if="${services == null or services.isEmpty()}" class="empty-list">
+            <i class="bi bi-grid"></i><p>Aucun service ajouté.</p>
+        </div>
+        <div class="services-list" th:unless="${services == null or services.isEmpty()}">
+            <div th:each="s, stat : ${services}" class="service-item"
+                 th:id="'svc-' + ${s.id}"
+                 th:style="'animation-delay:' + ${stat.index * 0.06} + 's'">
+                <div class="service-icon">
+                    <i th:classappend="${s.icone != null ? s.icone : 'bi-building'}" class="bi"></i>
+                </div>
+                <div class="service-info">
+                    <div class="service-nom" th:text="${s.nom}">Nom</div>
+                    <div class="service-desc" th:if="${s.description != null}" th:text="${s.description}">Desc</div>
+                </div>
+                <button class="btn-del" th:data-id="${s.id}" onclick="supprimerService(this.dataset.id)">
+                    <i class="bi bi-trash3"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="form-card">
+        <div class="form-card-title"><i class="bi bi-plus-circle"></i> Ajouter un service</div>
+        <input type="hidden" id="adminId" th:value="${currentUser?.id}">
+        <div class="form-group">
+            <label class="form-label">Nom du service</label>
+            <input type="text" id="nomService" class="form-input" placeholder="Ex: État Civil...">
+        </div>
+        <div class="form-group">
+            <label class="form-label">Description</label>
+            <textarea id="descService" class="form-input" placeholder="Ce service gère..."></textarea>
+        </div>
+        <div class="form-group">
+            <label class="form-label">Icône</label>
+            <div class="icones-grid">
+                <th:block th:each="ic : ${ {'bi-file-person','bi-house','bi-briefcase','bi-truck','bi-heart-pulse','bi-tree','bi-cash-coin','bi-map','bi-buildings','bi-people','bi-shield-check','bi-book'} }">
+                    <div class="icone-btn" th:data-icone="${ic}" onclick="selectIcone(this)">
+                        <i th:classappend="${ic}" class="bi"></i>
+                    </div>
+                </th:block>
+            </div>
+            <input type="hidden" id="iconeService" value="bi-building">
+        </div>
+        <button class="btn-ajouter" onclick="ajouterService()">
+            <i class="bi bi-plus-circle"></i> Ajouter
+        </button>
+    </div>
+</div>
+
+<div id="toast" style="display:none;position:fixed;top:20px;right:20px;z-index:1000;background:#1a2236;color:#fff;padding:12px 20px;border-radius:12px;font-size:.84rem;">
+    <span id="toastMsg"></span>
+</div>
+
+<script>
+    function showToast(msg, ok=true) {
+        const t = document.getElementById('toast');
+        document.getElementById('toastMsg').textContent = msg;
+        t.style.background = ok ? '#1a2236' : '#f76f8e';
+        t.style.display = 'block';
+        setTimeout(() => t.style.display = 'none', 3000);
+    }
+    function selectIcone(btn) {
+        document.querySelectorAll('.icone-btn').forEach(b => b.classList.remove('selected'));
+        btn.classList.add('selected');
+        document.getElementById('iconeService').value = btn.dataset.icone;
+    }
+    async function ajouterService() {
+        const adminId = document.getElementById('adminId').value;
+        const nom = document.getElementById('nomService').value.trim();
+        if (!nom) { showToast('Le nom est obligatoire.', false); return; }
+        const desc  = document.getElementById('descService').value.trim();
+        const icone = document.getElementById('iconeService').value;
+        try {
+            const res = await fetch(`/api/administrateur/vitrine/services?adminId=${adminId}&nom=${encodeURIComponent(nom)}&description=${encodeURIComponent(desc)}&icone=${icone}`, { method:'POST' });
+            if (res.ok) { showToast('Service ajouté !'); setTimeout(() => location.reload(), 1000); }
+            else showToast('Erreur.', false);
+        } catch { showToast('Erreur réseau.', false); }
+    }
+    async function supprimerService(id) {
+        if (!confirm('Supprimer ce service ?')) return;
+        try {
+            const res = await fetch(`/api/administrateur/vitrine/services/${id}`, { method:'DELETE' });
+            if (res.ok) { document.getElementById('svc-' + id)?.remove(); showToast('Supprimé.'); }
+            else showToast('Erreur.', false);
+        } catch { showToast('Erreur réseau.', false); }
+    }
+</script>
+</div>
+</body>
+</html>

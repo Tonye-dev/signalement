@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+<div th:fragment="content">
+<style>
+    :root { --accent:#4f8ef7; --accent2:#38d9a9; --accent3:#f7934f; --accent4:#f76f8e; --accent5:#a78bfa; --bg:#f0f4fb; --card-bg:#fff; --text-main:#1a2236; --text-muted:#7b8fb5; --border:#e4eaf5; }
+
+    .section-title { font-family:'Syne',sans-serif; font-size:.7rem; font-weight:700; letter-spacing:.12em; text-transform:uppercase; color:var(--text-muted); margin-bottom:14px; display:flex; align-items:center; gap:8px; }
+
+    /* ── Stats cards ── */
+    .stats-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin-bottom:24px; }
+    .stat-card { background:var(--card-bg); border-radius:18px; border:1px solid var(--border); padding:20px; display:flex; align-items:center; gap:14px; animation:slideUp .45s ease both; transition:transform .2s,box-shadow .2s; }
+    .stat-card:hover { transform:translateY(-4px); box-shadow:0 10px 28px rgba(0,0,0,.08); }
+    .stat-icon { width:48px; height:48px; border-radius:14px; display:flex; align-items:center; justify-content:center; font-size:1.2rem; flex-shrink:0; }
+    .stat-value { font-family:'Syne',sans-serif; font-size:1.8rem; font-weight:800; color:var(--text-main); line-height:1; }
+    .stat-label { font-size:.74rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:.06em; margin-top:4px; }
+
+    /* ── Charts grid ── */
+    .charts-grid-2 { display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:16px; }
+    .charts-grid-3 { display:grid; grid-template-columns:1fr 1fr 1fr; gap:16px; margin-bottom:16px; }
+    .chart-card { background:var(--card-bg); border-radius:18px; border:1px solid var(--border); padding:22px; animation:slideUp .45s ease both; transition:box-shadow .2s; }
+    .chart-card:hover { box-shadow:0 8px 24px rgba(0,0,0,.07); }
+    .chart-card-title { font-family:'Syne',sans-serif; font-size:.88rem; font-weight:700; color:var(--text-main); margin-bottom:16px; display:flex; align-items:center; gap:8px; }
+    .chart-card-title i { color:var(--accent); }
+    .chart-wrap { position:relative; }
+    .chart-wrap.h200 { height:200px; }
+    .chart-wrap.h240 { height:240px; }
+    .chart-wrap.h180 { height:180px; }
+
+    /* ── Temps résolution ── */
+    .temps-grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:16px; }
+    .temps-card { background:var(--card-bg); border-radius:18px; border:1px solid var(--border); padding:20px; animation:slideUp .45s ease both; }
+    .temps-value { font-family:'Syne',sans-serif; font-size:2rem; font-weight:800; color:var(--text-main); }
+    .temps-label { font-size:.74rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:.06em; margin-bottom:8px; display:flex; align-items:center; gap:6px; }
+    .temps-sub { font-size:.76rem; color:var(--text-muted); margin-top:4px; }
+
+    /* ── Types par quartier table ── */
+    .quartier-table { width:100%; border-collapse:collapse; }
+    .quartier-table th { padding:8px 12px; font-size:.71rem; font-weight:700; text-transform:uppercase; letter-spacing:.07em; color:var(--text-muted); background:#f8faff; border-bottom:1px solid var(--border); text-align:left; }
+    .quartier-table td { padding:10px 12px; font-size:.82rem; color:var(--text-main); border-bottom:1px solid #f5f7fc; vertical-align:top; }
+    .quartier-table tr:last-child td { border-bottom:none; }
+    .type-pill { display:inline-flex; align-items:center; gap:4px; background:rgba(79,142,247,.08); color:var(--accent); border-radius:50px; padding:2px 8px; font-size:.72rem; font-weight:500; margin:2px; }
+
+    /* ── Export PDF ── */
+    .pdf-bar { display:flex; align-items:center; gap:10px; margin-bottom:20px; flex-wrap:wrap; }
+    .btn-pdf { background:var(--accent4); color:#fff; border:none; border-radius:10px; padding:10px 20px; font-size:.84rem; font-weight:600; cursor:pointer; display:inline-flex; align-items:center; gap:7px; transition:background .18s,transform .18s; text-decoration:none; }
+    .btn-pdf:hover { background:#e85d7e; color:#fff; transform:translateY(-2px); }
+    .btn-pdf-all { background:var(--text-main); color:#fff; }
+    .btn-pdf-all:hover { background:#0f1729; color:#fff; }
+
+    @keyframes slideUp { from{opacity:0;transform:translateY(18px)} to{opacity:1;transform:translateY(0)} }
+    @media(max-width:900px) { .stats-grid,.charts-grid-2,.charts-grid-3,.temps-grid { grid-template-columns:1fr 1fr; } }
+    @media(max-width:600px) { .stats-grid,.charts-grid-2,.charts-grid-3,.temps-grid { grid-template-columns:1fr; } }
+</style>
+
+<!-- ── EXPORT PDF ── -->
+<div class="pdf-bar">
+    <a th:href="@{/api/pdf/rapports/mairie/{id}(id=${currentUser?.id})}"
+       class="btn-pdf btn-pdf-all" target="_blank">
+        <i class="bi bi-file-earmark-arrow-down"></i> Exporter tous les rapports PDF
+    </a>
+</div>
+
+<!-- ── STATS CARDS ── -->
+<div class="section-title"><i class="bi bi-bar-chart-line"></i> Vue d'ensemble</div>
+<div class="stats-grid">
+    <div class="stat-card" style="animation-delay:.04s">
+        <div class="stat-icon" style="background:rgba(79,142,247,.1);color:var(--accent);"><i class="bi bi-clipboard-data"></i></div>
+        <div><div class="stat-value" th:text="${dashboard.totalProblemes}">0</div><div class="stat-label">Total signalements</div></div>
+    </div>
+    <div class="stat-card" style="animation-delay:.08s">
+        <div class="stat-icon" style="background:rgba(247,147,79,.1);color:var(--accent3);"><i class="bi bi-hourglass-split"></i></div>
+        <div><div class="stat-value" th:text="${dashboard.problemesEnAttente}">0</div><div class="stat-label">En cours</div></div>
+    </div>
+    <div class="stat-card" style="animation-delay:.12s">
+        <div class="stat-icon" style="background:rgba(56,217,169,.1);color:var(--accent2);"><i class="bi bi-check2-circle"></i></div>
+        <div><div class="stat-value" th:text="${dashboard.problemesResolus}">0</div><div class="stat-label">Résolus</div></div>
+    </div>
+    <div class="stat-card" style="animation-delay:.16s">
+        <div class="stat-icon" style="background:rgba(167,139,250,.1);color:var(--accent5);"><i class="bi bi-percent"></i></div>
+        <div>
+            <div class="stat-value"
+                 th:text="${dashboard.totalProblemes > 0 ? #numbers.formatDecimal(dashboard.problemesResolus * 100.0 / dashboard.totalProblemes, 1, 1) + '%' : '—'}">—</div>
+            <div class="stat-label">Taux résolution</div>
+        </div>
+    </div>
+</div>
+
+<!-- ── TEMPS DE RÉSOLUTION ── -->
+<div class="section-title" style="margin-top:8px;"><i class="bi bi-stopwatch"></i> Temps de résolution</div>
+<div class="temps-grid">
+    <div class="temps-card">
+        <div class="temps-label"><i class="bi bi-hourglass-split" style="color:var(--accent2);"></i> Temps moyen global</div>
+        <div class="temps-value" th:text="${dashboard.tempsMoyenResolutionFormate}">—</div>
+        <div class="temps-sub" th:text="${dashboard.problemesResolus} + ' problème(s) résolu(s)'">0 résolu(s)</div>
+    </div>
+    <div class="chart-card">
+        <div class="chart-card-title"><i class="bi bi-bar-chart"></i> Temps moyen par type</div>
+        <div class="chart-wrap h200"><canvas id="chartTempsType"></canvas></div>
+    </div>
+</div>
+
+<!-- ── COMPARAISON SIGNALÉS VS RÉSOLUS ── -->
+<div class="section-title"><i class="bi bi-graph-up"></i> Évolution mensuelle</div>
+<div class="charts-grid-2">
+    <div class="chart-card" style="animation-delay:.1s">
+        <div class="chart-card-title"><i class="bi bi-calendar-range"></i> Signalés vs Résolus par mois</div>
+        <div class="chart-wrap h240"><canvas id="chartSignalesResolus"></canvas></div>
+    </div>
+    <div class="chart-card" style="animation-delay:.15s">
+        <div class="chart-card-title"><i class="bi bi-graph-up-arrow"></i> Évolution par semaine</div>
+        <div class="chart-wrap h240"><canvas id="chartSemaine"></canvas></div>
+    </div>
+</div>
+
+<!-- ── TOP QUARTIERS + TYPES FRÉQUENTS ── -->
+<div class="section-title"><i class="bi bi-pin-map"></i> Analyse géographique</div>
+<div class="charts-grid-2">
+    <div class="chart-card" style="animation-delay:.2s">
+        <div class="chart-card-title"><i class="bi bi-geo-alt"></i> Top quartiers (signalements)</div>
+        <div class="chart-wrap h200"><canvas id="chartQuartiers"></canvas></div>
+    </div>
+    <div class="chart-card" style="animation-delay:.25s">
+        <div class="chart-card-title"><i class="bi bi-tags"></i> Types de problèmes les plus fréquents</div>
+        <div class="chart-wrap h200"><canvas id="chartTypes"></canvas></div>
+    </div>
+</div>
+
+<!-- ── TYPES PAR QUARTIER ── -->
+<div class="section-title" style="margin-top:8px;"><i class="bi bi-table"></i> Types de problèmes par quartier</div>
+<div class="chart-card" style="animation-delay:.3s; overflow-x:auto;">
+    <div th:if="${dashboard.typesParQuartier == null or dashboard.typesParQuartier.isEmpty()}"
+         style="text-align:center;color:var(--text-muted);padding:24px;font-size:.84rem;">
+        Aucune donnée disponible
+    </div>
+    <table class="quartier-table" th:unless="${dashboard.typesParQuartier == null or dashboard.typesParQuartier.isEmpty()}">
+        <thead>
+            <tr>
+                <th>Quartier</th>
+                <th>Types de problèmes</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr th:each="entry : ${dashboard.typesParQuartier}">
+                <td style="font-weight:600;" th:text="${entry.key}">Quartier</td>
+                <td>
+                    <span th:each="typeEntry : ${entry.value}" class="type-pill">
+                        <span th:text="${typeEntry.key}">Type</span>
+                        <span style="font-weight:700;" th:text="'(' + ${typeEntry.value} + ')'">0</span>
+                    </span>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+<script th:inline="javascript">
+    // Données injectées par Thymeleaf
+    const tempsMoyenParType  = /*[[${dashboard.tempsMoyenParType}]]*/ {};
+    const signalesParMois    = /*[[${dashboard.signalesParMois}]]*/ {};
+    const resolusParMois     = /*[[${dashboard.resolusParMois}]]*/ {};
+    const evolutionSemaine   = /*[[${dashboard.evolutionParSemaine}]]*/ {};
+    const topQuartiers       = /*[[${dashboard.topQuartiers}]]*/ {};
+    const typesFrequents     = /*[[${dashboard.typesFrequents}]]*/ {};
+
+    const ACCENT  = '#4f8ef7';
+    const ACCENT2 = '#38d9a9';
+    const ACCENT3 = '#f7934f';
+    const ACCENT4 = '#f76f8e';
+    const ACCENT5 = '#a78bfa';
+
+    const palette = [ACCENT, ACCENT2, ACCENT3, ACCENT4, ACCENT5, '#f7d94f', '#4fffff', '#ff6b6b'];
+
+    const chartOpts = (extra={}) => ({
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: {
+            y: { beginAtZero:true, grid:{ color:'rgba(0,0,0,.04)' }, ticks:{ font:{size:10} } },
+            x: { grid:{ display:false }, ticks:{ font:{size:10} } }
+        },
+        ...extra
+    });
+
+    // ── Temps moyen par type ──
+    if (Object.keys(tempsMoyenParType).length > 0) {
+        const labels = Object.keys(tempsMoyenParType);
+        const vals   = Object.values(tempsMoyenParType).map(h => +(h < 24 ? h : h/24).toFixed(1));
+        const unite  = Object.values(tempsMoyenParType).some(h => h >= 24) ? 'jours' : 'heures';
+        new Chart(document.getElementById('chartTempsType'), {
+            type: 'bar',
+            data: { labels, datasets: [{ label:`Temps (${unite})`, data:vals, backgroundColor:'rgba(56,217,169,.7)', borderColor:ACCENT2, borderWidth:2, borderRadius:7 }] },
+            options: { ...chartOpts(), plugins:{ legend:{display:false}, tooltip:{ callbacks:{ label: c => ` ${c.raw} ${unite}` } } } }
+        });
+    }
+
+    // ── Signalés vs Résolus par mois ──
+    const allMois = [...new Set([...Object.keys(signalesParMois), ...Object.keys(resolusParMois)])].sort();
+    if (allMois.length > 0) {
+        new Chart(document.getElementById('chartSignalesResolus'), {
+            type: 'bar',
+            data: {
+                labels: allMois,
+                datasets: [
+                    { label:'Signalés', data: allMois.map(m => signalesParMois[m]||0), backgroundColor:'rgba(79,142,247,.7)', borderColor:ACCENT, borderWidth:2, borderRadius:6 },
+                    { label:'Résolus',  data: allMois.map(m => resolusParMois[m]||0),  backgroundColor:'rgba(56,217,169,.7)', borderColor:ACCENT2, borderWidth:2, borderRadius:6 }
+                ]
+            },
+            options: { ...chartOpts(), plugins:{ legend:{ display:true, labels:{ font:{size:11} } } } }
+        });
+    }
+
+    // ── Évolution par semaine ──
+    if (Object.keys(evolutionSemaine).length > 0) {
+        const semLabels = Object.keys(evolutionSemaine).map(w => 'S' + w.toString().slice(-2));
+        new Chart(document.getElementById('chartSemaine'), {
+            type: 'line',
+            data: {
+                labels: semLabels,
+                datasets: [{ label:'Signalements', data: Object.values(evolutionSemaine), borderColor:ACCENT, backgroundColor:'rgba(79,142,247,.1)', tension:0.4, fill:true, pointRadius:4, pointBackgroundColor:ACCENT }]
+            },
+            options: { ...chartOpts(), plugins:{ legend:{display:false} } }
+        });
+    }
+
+    // ── Top quartiers ──
+    if (Object.keys(topQuartiers).length > 0) {
+        const qLabels = Object.keys(topQuartiers).slice(0, 8);
+        const qVals   = qLabels.map(k => topQuartiers[k]);
+        new Chart(document.getElementById('chartQuartiers'), {
+            type: 'bar',
+            data: { labels: qLabels, datasets: [{ data: qVals, backgroundColor: qLabels.map((_,i) => palette[i%palette.length]), borderRadius:7 }] },
+            options: { ...chartOpts({ indexAxis:'y' }), plugins:{ legend:{display:false} }, scales:{ x:{ beginAtZero:true, grid:{color:'rgba(0,0,0,.04)'}, ticks:{font:{size:10}} }, y:{ grid:{display:false}, ticks:{font:{size:10}} } } }
+        });
+    }
+
+    // ── Types fréquents ──
+    if (Object.keys(typesFrequents).length > 0) {
+        new Chart(document.getElementById('chartTypes'), {
+            type: 'doughnut',
+            data: {
+                labels: Object.keys(typesFrequents),
+                datasets: [{ data: Object.values(typesFrequents), backgroundColor: palette, borderWidth: 2, borderColor:'#fff' }]
+            },
+            options: { responsive:true, maintainAspectRatio:false, plugins:{ legend:{ position:'bottom', labels:{ font:{size:10}, padding:10 } } } }
+        });
+    }
+</script>
+</div>
+</body>
+</html>

@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+<div th:fragment="content">
+<style>
+    :root { --accent:#4f8ef7; --accent2:#38d9a9; --accent3:#f7934f; --accent4:#f76f8e; --bg:#f0f4fb; --card-bg:#fff; --text-main:#1a2236; --text-muted:#7b8fb5; --border:#e4eaf5; }
+    .page-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:24px; flex-wrap:wrap; gap:12px; }
+    .page-header-left h2 { font-family:'Syne',sans-serif; font-size:1.3rem; font-weight:800; color:var(--text-main); margin:0; }
+    .page-header-left p { font-size:.82rem; color:var(--text-muted); margin:4px 0 0; }
+
+    .header-actions { display:flex; gap:10px; flex-wrap:wrap; }
+    .btn-primary-aspu { background:var(--accent); color:#fff; border:none; border-radius:10px; padding:10px 20px; font-size:.84rem; font-weight:600; text-decoration:none; display:inline-flex; align-items:center; gap:7px; transition:background .18s,transform .18s; }
+    .btn-primary-aspu:hover { background:#3a7de8; color:#fff; transform:translateY(-2px); }
+    .btn-pdf-all { background:var(--text-main); color:#fff; border:none; border-radius:10px; padding:10px 20px; font-size:.84rem; font-weight:600; text-decoration:none; display:inline-flex; align-items:center; gap:7px; transition:background .18s,transform .18s; }
+    .btn-pdf-all:hover { background:#0f1729; color:#fff; transform:translateY(-2px); }
+
+    .table-card { background:var(--card-bg); border-radius:18px; border:1px solid var(--border); overflow:hidden; animation:slideUp .45s ease both; }
+    .table-card-header { padding:16px 22px; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; }
+    .table-card-title { font-family:'Syne',sans-serif; font-size:.9rem; font-weight:700; color:var(--text-main); }
+
+    .search-wrap { position:relative; }
+    .search-wrap input { background:var(--bg); border:1px solid var(--border); border-radius:8px; padding:7px 12px 7px 34px; font-size:.82rem; color:var(--text-main); outline:none; transition:border .18s; width:200px; }
+    .search-wrap input:focus { border-color:var(--accent); }
+    .search-wrap i { position:absolute; left:10px; top:50%; transform:translateY(-50%); color:var(--text-muted); font-size:.85rem; }
+
+    table { width:100%; border-collapse:collapse; }
+    thead th { padding:11px 18px; font-size:.71rem; font-weight:700; text-transform:uppercase; letter-spacing:.08em; color:var(--text-muted); background:#f8faff; border-bottom:1px solid var(--border); text-align:left; }
+    tbody tr { border-bottom:1px solid #f5f7fc; transition:background .15s; }
+    tbody tr:last-child { border-bottom:none; }
+    tbody tr:hover { background:#f8faff; }
+    tbody td { padding:13px 18px; font-size:.83rem; color:var(--text-main); vertical-align:middle; }
+
+    .rapport-contenu { font-size:.82rem; color:var(--text-muted); overflow:hidden; max-height:2.5em; }
+    .prob-badge { display:inline-flex; align-items:center; gap:5px; background:rgba(79,142,247,.08); color:var(--accent); border-radius:50px; padding:3px 10px; font-size:.74rem; font-weight:500; }
+
+    .btn-pdf { display:inline-flex; align-items:center; gap:5px; background:rgba(247,111,142,.08); color:var(--accent4); border:1px solid rgba(247,111,142,.2); border-radius:7px; padding:5px 12px; font-size:.76rem; font-weight:600; text-decoration:none; transition:all .15s; }
+    .btn-pdf:hover { background:rgba(247,111,142,.15); color:var(--accent4); }
+
+    /* Pagination */
+    .pagination-bar { display:flex; align-items:center; justify-content:center; gap:6px; padding:16px; flex-wrap:wrap; }
+    .page-btn { background:var(--bg); border:1px solid var(--border); border-radius:8px; padding:6px 12px; font-size:.82rem; font-weight:600; cursor:pointer; color:var(--text-muted); transition:all .15s; }
+    .page-btn:hover, .page-btn.active { background:var(--accent); color:#fff; border-color:var(--accent); }
+
+    .empty-state { padding:60px 24px; text-align:center; color:var(--text-muted); }
+    .empty-state i { font-size:2.5rem; opacity:.2; display:block; margin-bottom:12px; }
+
+    @keyframes slideUp { from{opacity:0;transform:translateY(18px)} to{opacity:1;transform:translateY(0)} }
+</style>
+
+<div class="page-header">
+    <div class="page-header-left">
+        <h2><i class="bi bi-file-earmark-text me-2" style="color:var(--accent);"></i>Mes rapports</h2>
+        <p>Tous les rapports rédigés pour votre mairie</p>
+    </div>
+    <div class="header-actions">
+        <a th:href="@{/administrateur/rapports/ajouter}" class="btn-primary-aspu">
+            <i class="bi bi-file-earmark-plus"></i> Rédiger un rapport
+        </a>
+        <a th:href="@{/api/pdf/rapports/mairie/{id}(id=${currentUser?.id})}"
+           class="btn-pdf-all" target="_blank">
+            <i class="bi bi-file-earmark-arrow-down"></i> Exporter tout en PDF
+        </a>
+    </div>
+</div>
+
+<div class="table-card">
+    <div class="table-card-header">
+        <span class="table-card-title">
+            <span th:text="${rapports != null ? rapports.size() : 0}">0</span> rapport(s)
+        </span>
+        <div class="search-wrap">
+            <i class="bi bi-search"></i>
+            <input type="text" id="searchInput" placeholder="Rechercher...">
+        </div>
+    </div>
+
+    <div th:if="${rapports == null or rapports.isEmpty()}" class="empty-state">
+        <i class="bi bi-file-earmark-x"></i>
+        <p>Aucun rapport rédigé pour le moment.</p>
+        <a th:href="@{/administrateur/rapports/ajouter}" class="btn-primary-aspu" style="display:inline-flex;margin-top:14px;">
+            <i class="bi bi-file-earmark-plus"></i> Rédiger le premier rapport
+        </a>
+    </div>
+
+    <div th:unless="${rapports == null or rapports.isEmpty()}">
+        <table id="rapportsTable">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Signalement concerné</th>
+                    <th>Contenu</th>
+                    <th>Date</th>
+                    <th>PDF</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr th:each="r, stat : ${rapports}">
+                    <td style="color:var(--text-muted);font-size:.76rem;" th:text="${stat.index + 1}">1</td>
+                    <td>
+                        <span class="prob-badge" th:if="${r.probleme != null}">
+                            <i class="bi bi-exclamation-circle"></i>
+                            <span th:text="${r.probleme.titre}">Problème</span>
+                        </span>
+                    </td>
+                    <td>
+                        <div class="rapport-contenu" th:text="${r.contenu}">Contenu...</div>
+                    </td>
+                    <td style="font-size:.78rem;color:var(--text-muted);"
+                        th:text="${r.dateRapport != null ? #temporals.format(r.dateRapport, 'dd/MM/yyyy') : '—'}">Date</td>
+                    <td>
+                        <a th:href="@{/api/pdf/rapports/{id}(id=${r.id})}"
+                           class="btn-pdf" target="_blank">
+                            <i class="bi bi-file-earmark-pdf"></i> PDF
+                        </a>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+
+        <!-- Pagination -->
+        <div class="pagination-bar" id="paginationBar"></div>
+    </div>
+</div>
+
+<script>
+    const PAGE_SIZE = 10;
+    let currentPage = 1;
+    let allRows = [];
+
+    window.addEventListener('load', () => {
+        allRows = [...document.querySelectorAll('#rapportsTable tbody tr')];
+        renderPage();
+    });
+
+    function renderPage() {
+        const visible = allRows.filter(r => r.style.display !== 'none');
+        const total   = Math.ceil(visible.length / PAGE_SIZE);
+        visible.forEach((r, i) => {
+            r.style.display = (i >= (currentPage-1)*PAGE_SIZE && i < currentPage*PAGE_SIZE) ? '' : 'none';
+        });
+        const bar = document.getElementById('paginationBar');
+        bar.innerHTML = '';
+        if (total > 1) {
+            for (let i=1; i<=total; i++) {
+                const btn = document.createElement('button');
+                btn.className = 'page-btn' + (i===currentPage?' active':'');
+                btn.textContent = i;
+                btn.onclick = () => { currentPage=i; renderPage(); };
+                bar.appendChild(btn);
+            }
+        }
+    }
+
+    document.getElementById('searchInput')?.addEventListener('input', function() {
+        const val = this.value.toLowerCase();
+        allRows = [...document.querySelectorAll('#rapportsTable tbody tr')];
+        allRows.forEach(r => r.style.display = r.textContent.toLowerCase().includes(val) ? '' : 'none');
+        currentPage=1; renderPage();
+    });
+</script>
+</div>
+</body>
+</html>

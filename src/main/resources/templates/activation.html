@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Activation du compte - ASPU</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, #0d1117 0%, #161b27 50%, #0d1f3c 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'DM Sans', sans-serif;
+            padding: 20px;
+        }
+
+        .activation-card {
+            background: rgba(255,255,255,.97);
+            border-radius: 24px;
+            padding: 52px 48px 44px;
+            max-width: 480px;
+            width: 100%;
+            text-align: center;
+            box-shadow: 0 30px 80px rgba(0,0,0,.4);
+            animation: popIn .5s cubic-bezier(.34,1.56,.64,1) both;
+        }
+
+        @keyframes popIn {
+            from { opacity: 0; transform: scale(.88) translateY(20px); }
+            to   { opacity: 1; transform: scale(1) translateY(0); }
+        }
+
+        /* ── ICÔNE ANIMÉE ── */
+        .icon-circle {
+            width: 88px;
+            height: 88px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 28px;
+            font-size: 2.2rem;
+            animation: iconPop .6s cubic-bezier(.34,1.56,.64,1) .2s both;
+        }
+
+        @keyframes iconPop {
+            from { opacity: 0; transform: scale(0); }
+            to   { opacity: 1; transform: scale(1); }
+        }
+
+        .icon-success { background: rgba(56,217,169,.12); color: #38d9a9; }
+        .icon-error   { background: rgba(247,111,142,.12); color: #f76f8e; }
+        .icon-expired { background: rgba(247,147,79,.12);  color: #f7934f; }
+        .icon-already { background: rgba(79,142,247,.12);  color: #4f8ef7; }
+        .icon-loading { background: rgba(79,142,247,.12);  color: #4f8ef7; }
+
+        /* ── TEXTES ── */
+        .card-title {
+            font-family: 'Syne', sans-serif;
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: #1a2236;
+            margin-bottom: 10px;
+        }
+
+        .card-message {
+            font-size: .92rem;
+            color: #7b8fb5;
+            line-height: 1.6;
+            margin-bottom: 32px;
+        }
+
+        /* ── BOUTONS ── */
+        .btn-primary-aspu {
+            background: #4f8ef7;
+            color: #fff;
+            border: none;
+            border-radius: 12px;
+            padding: 13px 32px;
+            font-size: .9rem;
+            font-weight: 600;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: background .18s, transform .18s, box-shadow .18s;
+        }
+
+        .btn-primary-aspu:hover {
+            background: #3a7de8;
+            color: #fff;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(79,142,247,.35);
+        }
+
+        .btn-secondary-aspu {
+            background: #f0f4fb;
+            color: #1a2236;
+            border: 1px solid #e4eaf5;
+            border-radius: 12px;
+            padding: 12px 28px;
+            font-size: .88rem;
+            font-weight: 500;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: background .18s, transform .18s;
+            margin-top: 10px;
+        }
+
+        .btn-secondary-aspu:hover {
+            background: #e4eaf5;
+            color: #1a2236;
+            transform: translateY(-1px);
+        }
+
+        /* ── COUNTDOWN ── */
+        .countdown-bar-wrap {
+            background: #f0f4fb;
+            border-radius: 50px;
+            height: 5px;
+            margin-top: 28px;
+            overflow: hidden;
+        }
+
+        .countdown-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #38d9a9, #4f8ef7);
+            border-radius: 50px;
+            width: 100%;
+            transition: width linear;
+        }
+
+        .countdown-text {
+            font-size: .75rem;
+            color: #b0bece;
+            margin-top: 8px;
+        }
+
+        /* ── LOGO ── */
+        .aspu-logo {
+            position: absolute;
+            top: 28px;
+            left: 0;
+            right: 0;
+            text-align: center;
+            font-family: 'Syne', sans-serif;
+            font-weight: 800;
+            font-size: .9rem;
+            color: rgba(255,255,255,.3);
+            letter-spacing: .1em;
+        }
+
+        /* ── LOADING SPINNER ── */
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .spinner-icon {
+            animation: spin 1s linear infinite;
+            display: inline-block;
+        }
+
+        /* ── SECTIONS CONDITIONNELLES ── */
+        .status-section { display: none; }
+        .status-section.active { display: block; }
+    </style>
+</head>
+<body>
+
+    <div class="aspu-logo">&#9670; ASPU</div>
+
+    <div class="activation-card">
+
+        <!-- ══ SUCCÈS ══ -->
+        <div class="status-section" id="sec-success">
+            <div class="icon-circle icon-success">
+                <i class="bi bi-check2-circle"></i>
+            </div>
+            <div class="card-title">Compte activé !</div>
+            <div class="card-message">
+                Votre compte a été vérifié et activé avec succès.<br>
+                Vous pouvez maintenant vous connecter à ASPU.
+            </div>
+            <a href="/login" class="btn-primary-aspu">
+                <i class="bi bi-box-arrow-in-right"></i> Se connecter
+            </a>
+            <div class="countdown-bar-wrap">
+                <div class="countdown-bar" id="countdownBar"></div>
+            </div>
+            <div class="countdown-text">Redirection automatique dans <span id="countdownNum">5</span>s…</div>
+        </div>
+
+        <!-- ══ ERREUR TOKEN INVALIDE ══ -->
+        <div class="status-section" id="sec-error">
+            <div class="icon-circle icon-error">
+                <i class="bi bi-x-circle"></i>
+            </div>
+            <div class="card-title">Lien invalide</div>
+            <div class="card-message">
+                Ce lien d'activation est invalide ou a déjà été utilisé.<br>
+                Vérifiez votre email ou créez un nouveau compte.
+            </div>
+            <a href="/register" class="btn-primary-aspu">
+                <i class="bi bi-person-plus"></i> Créer un compte
+            </a>
+            <br>
+            <a href="/login" class="btn-secondary-aspu">
+                <i class="bi bi-box-arrow-in-right"></i> Se connecter
+            </a>
+        </div>
+
+        <!-- ══ TOKEN EXPIRÉ ══ -->
+        <div class="status-section" id="sec-expired">
+            <div class="icon-circle icon-expired">
+                <i class="bi bi-clock-history"></i>
+            </div>
+            <div class="card-title">Lien expiré</div>
+            <div class="card-message">
+                Votre lien d'activation a expiré.<br>
+                Inscrivez-vous à nouveau pour recevoir un nouveau lien.
+            </div>
+            <a href="/register" class="btn-primary-aspu">
+                <i class="bi bi-arrow-repeat"></i> Nouvelle inscription
+            </a>
+            <br>
+            <a href="/login" class="btn-secondary-aspu">
+                <i class="bi bi-box-arrow-in-right"></i> Se connecter
+            </a>
+        </div>
+
+        <!-- ══ DÉJÀ ACTIVÉ ══ -->
+        <div class="status-section" id="sec-already">
+            <div class="icon-circle icon-already">
+                <i class="bi bi-person-check"></i>
+            </div>
+            <div class="card-title">Déjà activé</div>
+            <div class="card-message">
+                Votre compte est déjà actif.<br>
+                Connectez-vous directement avec vos identifiants.
+            </div>
+            <a href="/login" class="btn-primary-aspu">
+                <i class="bi bi-box-arrow-in-right"></i> Se connecter
+            </a>
+        </div>
+
+        <!-- ══ EN COURS (fallback si pas de status) ══ -->
+        <div class="status-section" id="sec-loading">
+            <div class="icon-circle icon-loading">
+                <i class="bi bi-arrow-repeat spinner-icon"></i>
+            </div>
+            <div class="card-title">Activation en cours…</div>
+            <div class="card-message">
+                Vérification de votre lien d'activation.
+            </div>
+        </div>
+
+    </div>
+
+    <script th:inline="javascript">
+        // Lire le paramètre ?status= injecté par Thymeleaf
+        const status = /*[[${param.status}]]*/ null;
+
+        // Afficher la bonne section
+        const sections = ['success', 'error', 'expired', 'already', 'loading'];
+        let active = 'loading';
+
+        if (status) {
+            const s = Array.isArray(status) ? status[0] : status;
+            if (sections.includes(s)) active = s;
+        }
+
+        document.getElementById('sec-' + active).classList.add('active');
+
+        // Countdown + redirection auto si succès
+        if (active === 'success') {
+            let remaining = 5;
+            const numEl = document.getElementById('countdownNum');
+            const barEl = document.getElementById('countdownBar');
+
+            // Lancer la barre
+            requestAnimationFrame(() => {
+                barEl.style.transition = 'width ' + remaining + 's linear';
+                barEl.style.width = '0%';
+            });
+
+            const timer = setInterval(() => {
+                remaining--;
+                numEl.textContent = remaining;
+                if (remaining <= 0) {
+                    clearInterval(timer);
+                    window.location.href = '/login';
+                }
+            }, 1000);
+        }
+    </script>
+
+</body>
+</html>

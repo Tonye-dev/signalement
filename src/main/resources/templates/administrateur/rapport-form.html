@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+<div th:fragment="content">
+<style>
+    :root { --accent:#4f8ef7; --accent2:#38d9a9; --accent3:#f7934f; --accent4:#f76f8e; --bg:#f0f4fb; --card-bg:#fff; --text-main:#1a2236; --text-muted:#7b8fb5; --border:#e4eaf5; }
+    .page-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:24px; flex-wrap:wrap; gap:12px; }
+    .page-header-left h2 { font-family:'Syne',sans-serif; font-size:1.3rem; font-weight:800; color:var(--text-main); margin:0; }
+    .page-header-left p { font-size:.82rem; color:var(--text-muted); margin:4px 0 0; }
+    .btn-secondary-aspu { background:var(--bg); color:var(--text-main); border:1px solid var(--border); border-radius:10px; padding:9px 18px; font-size:.83rem; font-weight:500; text-decoration:none; display:inline-flex; align-items:center; gap:7px; transition:all .18s; }
+    .btn-secondary-aspu:hover { border-color:var(--accent); color:var(--accent); }
+    .form-card { background:var(--card-bg); border-radius:18px; border:1px solid var(--border); padding:32px; max-width:680px; animation:slideUp .45s ease both; }
+    .form-group { margin-bottom:20px; }
+    .form-label { display:block; font-size:.8rem; font-weight:600; color:var(--text-main); margin-bottom:7px; }
+    .form-label span { color:var(--accent4); }
+    .form-input { width:100%; background:var(--bg); border:1px solid var(--border); border-radius:10px; padding:11px 14px; font-size:.85rem; color:var(--text-main); outline:none; transition:border .18s,box-shadow .18s; font-family:'DM Sans',sans-serif; }
+    .form-input:focus { border-color:var(--accent); box-shadow:0 0 0 3px rgba(79,142,247,.08); }
+    .form-input::placeholder { color:var(--text-muted); }
+    select.form-input { cursor:pointer; }
+    textarea.form-input { resize:vertical; min-height:180px; }
+
+    /* Infos signalement sélectionné */
+    .selected-prob { background:rgba(79,142,247,.06); border:1px solid rgba(79,142,247,.15); border-radius:12px; padding:14px 18px; margin-bottom:20px; display:none; }
+    .selected-prob.visible { display:block; }
+    .selected-prob-titre { font-weight:600; font-size:.88rem; color:var(--text-main); }
+    .selected-prob-meta { font-size:.76rem; color:var(--text-muted); margin-top:4px; }
+
+    .form-actions { display:flex; gap:10px; margin-top:28px; padding-top:20px; border-top:1px solid var(--border); flex-wrap:wrap; }
+    .btn-submit { background:var(--accent); color:#fff; border:none; border-radius:10px; padding:12px 28px; font-size:.88rem; font-weight:600; cursor:pointer; transition:background .18s,transform .18s; display:inline-flex; align-items:center; gap:8px; }
+    .btn-submit:hover { background:#3a7de8; transform:translateY(-2px); }
+    @keyframes slideUp { from{opacity:0;transform:translateY(18px)} to{opacity:1;transform:translateY(0)} }
+    @keyframes spin { to{transform:rotate(360deg);} }
+</style>
+
+<div class="page-header">
+    <div class="page-header-left">
+        <h2><i class="bi bi-file-earmark-plus me-2" style="color:var(--accent);"></i>Rédiger un rapport</h2>
+        <p>Documentez le traitement d'un signalement</p>
+    </div>
+    <a th:href="@{/administrateur/rapports}" class="btn-secondary-aspu">
+        <i class="bi bi-arrow-left"></i> Mes rapports
+    </a>
+</div>
+
+<div class="form-card">
+    <form id="rapportForm">
+
+        <div class="form-group">
+            <label class="form-label">Signalement concerné <span>*</span></label>
+            <select id="problemeId" class="form-input" required onchange="afficherInfosProbleme()">
+                <option value="">-- Sélectionnez un signalement --</option>
+                <option th:each="p : ${problemes}"
+                        th:value="${p.id}"
+                        th:text="${p.titre + ' — ' + p.quartier}"
+                        th:data-desc="${p.description}"
+                        th:data-statut="${p.statut.name()}"
+                        th:selected="${p.id == problemeIdPreselect}">
+                </option>
+            </select>
+        </div>
+
+        <!-- Infos du signalement sélectionné -->
+        <div class="selected-prob" id="selectedProbInfo">
+            <div class="selected-prob-titre" id="selectedProbTitre"></div>
+            <div class="selected-prob-meta" id="selectedProbMeta"></div>
+        </div>
+
+        <div class="form-group">
+            <label class="form-label">Contenu du rapport <span>*</span></label>
+            <textarea id="contenu" class="form-input"
+                      placeholder="Décrivez les actions menées, l'état actuel du problème, les solutions apportées..."
+                      required></textarea>
+        </div>
+
+        <div class="form-actions">
+            <button type="submit" class="btn-submit" id="submitBtn">
+                <i class="bi bi-check2"></i> Enregistrer le rapport
+                <span id="spinner" class="d-none"
+                      style="width:14px;height:14px;border:2px solid rgba(255,255,255,.4);border-top-color:#fff;border-radius:50%;display:inline-block;animation:spin .7s linear infinite;"></span>
+            </button>
+            <a th:href="@{/administrateur/rapports}" class="btn-secondary-aspu">Annuler</a>
+        </div>
+
+    </form>
+</div>
+
+<div id="toast" style="display:none;position:fixed;top:20px;right:20px;z-index:1000;background:#1a2236;color:#fff;padding:12px 20px;border-radius:12px;font-size:.84rem;box-shadow:0 8px 24px rgba(0,0,0,.2);">
+    <span id="toastMsg"></span>
+</div>
+
+<script th:inline="javascript">
+    const adminId = /*[[${currentUser?.id}]]*/ null;
+
+    function afficherInfosProbleme() {
+        const sel = document.getElementById('problemeId');
+        const opt = sel.options[sel.selectedIndex];
+        const info = document.getElementById('selectedProbInfo');
+        if (!opt.value) { info.classList.remove('visible'); return; }
+        document.getElementById('selectedProbTitre').textContent = opt.text;
+        const statuts = { SIGNALE:'Signalé', EN_COURS:'En cours', RESOLU:'Résolu' };
+        document.getElementById('selectedProbMeta').textContent =
+            'Statut : ' + (statuts[opt.dataset.statut] || opt.dataset.statut);
+        info.classList.add('visible');
+    }
+
+    // Pré-sélection si on vient d'un signalement
+    window.addEventListener('load', () => {
+        const sel = document.getElementById('problemeId');
+        if (sel.value) afficherInfosProbleme();
+    });
+
+    function showToast(msg, ok=true) {
+        const t = document.getElementById('toast');
+        document.getElementById('toastMsg').textContent = msg;
+        t.style.background = ok ? '#1a2236' : '#f76f8e';
+        t.style.display = 'block';
+        setTimeout(() => t.style.display = 'none', 3500);
+    }
+
+    document.getElementById('rapportForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        const btn = document.getElementById('submitBtn');
+        const spinner = document.getElementById('spinner');
+        btn.disabled = true; spinner.classList.remove('d-none');
+
+        const problemeId = document.getElementById('problemeId').value;
+        const contenu    = document.getElementById('contenu').value;
+
+        if (!problemeId || !contenu.trim()) {
+            showToast('Veuillez remplir tous les champs.', false);
+            btn.disabled = false; spinner.classList.add('d-none');
+            return;
+        }
+
+        try {
+            const res = await fetch(
+                `/api/administrateurs/problemes/${problemeId}/rapports?administrateurId=${adminId}&contenu=${encodeURIComponent(contenu)}`,
+                { method: 'POST' }
+            );
+            if (res.ok) {
+                showToast('Rapport enregistré avec succès !');
+                setTimeout(() => window.location.href = '/administrateur/rapports', 1500);
+            } else {
+                showToast('Erreur : ' + await res.text(), false);
+            }
+        } catch {
+            showToast('Erreur réseau.', false);
+        }
+
+        btn.disabled = false; spinner.classList.add('d-none');
+    });
+</script>
+</div>
+</body>
+</html>

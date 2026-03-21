@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+<div th:fragment="content">
+<style>
+    :root { --accent:#4f8ef7; --accent2:#38d9a9; --bg:#f0f4fb; --card-bg:#fff; --text-main:#1a2236; --text-muted:#7b8fb5; --border:#e4eaf5; }
+    .back-link { display:inline-flex; align-items:center; gap:6px; font-size:.82rem; color:var(--text-muted); text-decoration:none; margin-bottom:20px; transition:color .15s; }
+    .back-link:hover { color:var(--accent); }
+    .page-header { margin-bottom:24px; }
+    .page-header h2 { font-family:'Syne',sans-serif; font-size:1.2rem; font-weight:800; color:var(--text-main); margin:0; }
+    .page-header p { font-size:.82rem; color:var(--text-muted); margin:4px 0 0; }
+
+    .services-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(260px,1fr)); gap:16px; }
+    .service-card { background:var(--card-bg); border-radius:18px; border:1px solid var(--border); padding:22px; animation:slideUp .4s ease both; transition:transform .2s,box-shadow .2s; }
+    .service-card:hover { transform:translateY(-4px); box-shadow:0 10px 28px rgba(0,0,0,.08); }
+    .service-icon { width:50px; height:50px; border-radius:14px; background:rgba(79,142,247,.1); color:var(--accent); display:flex; align-items:center; justify-content:center; font-size:1.3rem; margin-bottom:14px; }
+    .service-nom { font-family:'Syne',sans-serif; font-weight:700; font-size:.9rem; color:var(--text-main); margin-bottom:6px; }
+    .service-desc { font-size:.8rem; color:var(--text-muted); line-height:1.5; margin-bottom:14px; }
+
+    /* Sous-services */
+    .sous-services { border-top:1px solid var(--border); padding-top:12px; }
+    .sous-services-title { font-size:.7rem; font-weight:700; text-transform:uppercase; letter-spacing:.08em; color:var(--text-muted); margin-bottom:8px; }
+    .sous-service-item { display:flex; align-items:center; gap:7px; padding:5px 0; font-size:.8rem; color:var(--text-main); border-bottom:1px solid #f5f7fc; }
+    .sous-service-item:last-child { border-bottom:none; }
+    .sous-service-item i { color:var(--accent); font-size:.75rem; flex-shrink:0; }
+
+    .empty-state { padding:60px; text-align:center; color:var(--text-muted); background:var(--card-bg); border-radius:18px; border:1px solid var(--border); }
+    .empty-state i { font-size:2.5rem; opacity:.2; display:block; margin-bottom:12px; }
+
+    @keyframes slideUp { from{opacity:0;transform:translateY(18px)} to{opacity:1;transform:translateY(0)} }
+    @media(max-width:600px) { .services-grid { grid-template-columns:1fr; } }
+</style>
+
+<a th:href="@{/mairies/{id}(id=${mairie.id})}" class="back-link">
+    <i class="bi bi-arrow-left"></i> Retour à la vitrine
+</a>
+
+<div class="page-header">
+    <h2><i class="bi bi-grid-3x3-gap me-2" style="color:var(--accent);"></i>
+        Services — <span th:text="${mairie.nom}">Mairie</span>
+    </h2>
+    <p>Les différents services proposés par la mairie</p>
+</div>
+
+<div th:if="${services == null or services.isEmpty()}" class="empty-state">
+    <i class="bi bi-grid"></i>
+    <p>Aucun service renseigné pour le moment.</p>
+</div>
+
+<div class="services-grid" th:unless="${services == null or services.isEmpty()}">
+    <div th:each="s, stat : ${services}"
+         class="service-card"
+         th:style="'animation-delay:' + ${stat.index * 0.07} + 's'">
+
+        <div class="service-icon">
+            <i th:classappend="${s.icone != null ? s.icone : 'bi-building'}" class="bi"></i>
+        </div>
+
+        <div class="service-nom" th:text="${s.nom}">Nom du service</div>
+        <div class="service-desc" th:if="${s.description != null}" th:text="${s.description}">Description</div>
+
+        <!-- Sous-services -->
+        <div class="sous-services" th:if="${s.sousServices != null and !s.sousServices.isEmpty()}">
+            <div class="sous-services-title">Sous-services</div>
+            <div th:each="ss : ${s.sousServices}" class="sous-service-item">
+                <i class="bi bi-arrow-right-short"></i>
+                <span th:text="${ss.nom}">Sous-service</span>
+            </div>
+        </div>
+    </div>
+</div>
+</div>
+</body>
+</html>

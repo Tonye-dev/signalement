@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+<div th:fragment="content">
+<style>
+    :root { --accent:#4f8ef7; --accent2:#38d9a9; --accent3:#f7934f; --accent4:#f76f8e; --bg:#f0f4fb; --card-bg:#fff; --text-main:#1a2236; --text-muted:#7b8fb5; --border:#e4eaf5; }
+
+    .page-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:24px; flex-wrap:wrap; gap:12px; }
+    .page-header-left h2 { font-family:'Syne',sans-serif; font-size:1.3rem; font-weight:800; color:var(--text-main); margin:0; }
+    .page-header-left p { font-size:.82rem; color:var(--text-muted); margin:4px 0 0; }
+
+    /* Stats */
+    .stats-row { display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin-bottom:22px; }
+    .stat-mini { background:var(--card-bg); border-radius:14px; border:1px solid var(--border); padding:16px 18px; display:flex; align-items:center; gap:12px; animation:slideUp .4s ease both; transition:transform .2s; cursor:pointer; }
+    .stat-mini:hover { transform:translateY(-3px); box-shadow:0 8px 20px rgba(0,0,0,.07); }
+    .stat-mini-icon { width:40px; height:40px; border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:1rem; flex-shrink:0; }
+    .stat-mini-value { font-family:'Syne',sans-serif; font-size:1.4rem; font-weight:800; color:var(--text-main); line-height:1; }
+    .stat-mini-label { font-size:.7rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:.07em; margin-top:3px; }
+
+    /* Filtres */
+    .filters-bar { display:flex; align-items:center; gap:10px; margin-bottom:18px; flex-wrap:wrap; }
+    .filter-tab { background:var(--card-bg); border:1px solid var(--border); border-radius:50px; padding:6px 16px; font-size:.78rem; font-weight:600; color:var(--text-muted); cursor:pointer; transition:all .15s; user-select:none; }
+    .filter-tab.active { background:rgba(79,142,247,.1); border-color:rgba(79,142,247,.3); color:var(--accent); }
+    .search-wrap { position:relative; margin-left:auto; }
+    .search-wrap input { background:var(--card-bg); border:1px solid var(--border); border-radius:8px; padding:7px 12px 7px 34px; font-size:.82rem; color:var(--text-main); outline:none; transition:border .18s; width:210px; }
+    .search-wrap input:focus { border-color:var(--accent); }
+    .search-wrap i { position:absolute; left:10px; top:50%; transform:translateY(-50%); color:var(--text-muted); font-size:.85rem; }
+
+    /* Filtre date */
+    .date-filter { display:flex; align-items:center; gap:10px; margin-bottom:18px; flex-wrap:wrap; background:var(--card-bg); border:1px solid var(--border); border-radius:12px; padding:12px 16px; }
+    .date-filter label { font-size:.78rem; font-weight:600; color:var(--text-muted); }
+    .date-filter input[type=date] { background:var(--bg); border:1px solid var(--border); border-radius:8px; padding:6px 10px; font-size:.82rem; color:var(--text-main); outline:none; }
+    .btn-small { background:var(--accent); color:#fff; border:none; border-radius:8px; padding:7px 14px; font-size:.78rem; font-weight:600; cursor:pointer; }
+    .btn-reset { background:var(--bg); color:var(--text-muted); border:1px solid var(--border); border-radius:8px; padding:7px 12px; font-size:.78rem; cursor:pointer; }
+
+    /* Grille cartes */
+    .problemes-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(340px,1fr)); gap:16px; }
+    .probleme-card { background:var(--card-bg); border-radius:16px; border:1px solid var(--border); transition:box-shadow .2s,transform .2s; animation:slideUp .45s ease both; }
+    .probleme-card:hover { box-shadow:0 10px 30px rgba(0,0,0,.09); transform:translateY(-3px); }
+
+    .card-stripe { height:4px; border-radius:16px 16px 0 0; }
+    .card-stripe.SIGNALE  { background:var(--accent3); }
+    .card-stripe.EN_COURS { background:var(--accent); }
+    .card-stripe.RESOLU   { background:var(--accent2); }
+
+    .card-photo { width:100%; height:150px; object-fit:cover; display:block; }
+    .card-photo-placeholder { width:100%; height:150px; background:linear-gradient(135deg,#f0f4fb,#e4eaf5); display:flex; align-items:center; justify-content:center; color:var(--text-muted); font-size:2rem; }
+
+    .card-body { padding:16px; }
+    .card-top { display:flex; align-items:flex-start; justify-content:space-between; gap:10px; margin-bottom:8px; }
+    .card-titre { font-family:'Syne',sans-serif; font-weight:700; font-size:.9rem; color:var(--text-main); }
+    .statut-badge { display:inline-flex; align-items:center; gap:4px; border-radius:50px; padding:3px 10px; font-size:.71rem; font-weight:600; white-space:nowrap; flex-shrink:0; }
+    .badge-SIGNALE  { background:rgba(247,147,79,.1);  color:var(--accent3); }
+    .badge-EN_COURS { background:rgba(79,142,247,.1);  color:var(--accent); }
+    .badge-RESOLU   { background:rgba(56,217,169,.1);  color:var(--accent2); }
+
+    .card-type { font-size:.74rem; color:var(--accent); background:rgba(79,142,247,.07); border-radius:50px; padding:2px 9px; display:inline-block; margin-bottom:7px; }
+    .card-desc { font-size:.81rem; color:var(--text-muted); line-height:1.5; margin-bottom:10px; overflow:hidden; max-height:2.8em; }
+    .card-meta { display:flex; flex-wrap:wrap; gap:10px; margin-bottom:10px; }
+    .card-meta span { font-size:.74rem; color:var(--text-muted); display:flex; align-items:center; gap:4px; }
+
+    /* Temps résolution */
+    .temps-resolution { display:inline-flex; align-items:center; gap:5px; background:rgba(56,217,169,.1); color:var(--accent2); border-radius:50px; padding:3px 10px; font-size:.73rem; font-weight:600; margin-bottom:10px; }
+
+    /* Photos */
+    .card-photos-row { display:flex; gap:5px; margin-bottom:10px; flex-wrap:wrap; }
+    .photo-thumb { width:46px; height:46px; border-radius:7px; object-fit:cover; border:1px solid var(--border); cursor:pointer; transition:transform .15s; }
+    .photo-thumb:hover { transform:scale(1.06); }
+    .section-label-photos { font-size:.7rem; font-weight:700; text-transform:uppercase; letter-spacing:.08em; color:var(--text-muted); margin-bottom:5px; margin-top:8px; }
+
+    /* Actions */
+    .card-actions { display:flex; gap:8px; flex-wrap:wrap; border-top:1px solid var(--border); padding-top:12px; margin-top:8px; }
+    .btn-action { flex:1; border:1px solid var(--border); border-radius:8px; padding:7px 10px; font-size:.76rem; font-weight:600; cursor:pointer; transition:all .15s; display:flex; align-items:center; justify-content:center; gap:5px; background:var(--bg); color:var(--text-muted); text-decoration:none; }
+    .btn-action:hover { border-color:var(--accent); color:var(--accent); background:rgba(79,142,247,.06); }
+    .btn-action.primary { background:var(--accent); color:#fff; border-color:var(--accent); }
+    .btn-action.primary:hover { background:#3a7de8; color:#fff; }
+    .btn-action.success { background:rgba(56,217,169,.1); color:var(--accent2); border-color:rgba(56,217,169,.3); }
+    .btn-action.success:hover { background:rgba(56,217,169,.2); }
+
+    /* Pagination */
+    .pagination-bar { display:flex; align-items:center; justify-content:center; gap:6px; margin-top:24px; flex-wrap:wrap; }
+    .page-btn { background:var(--card-bg); border:1px solid var(--border); border-radius:8px; padding:7px 13px; font-size:.82rem; font-weight:600; cursor:pointer; color:var(--text-muted); transition:all .15s; }
+    .page-btn:hover, .page-btn.active { background:var(--accent); color:#fff; border-color:var(--accent); }
+    .page-btn:disabled { opacity:.4; cursor:not-allowed; }
+
+    /* Modal */
+    .modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,.45); z-index:1000; align-items:center; justify-content:center; backdrop-filter:blur(3px); }
+    .modal-overlay.open { display:flex; }
+    .modal-box { background:var(--card-bg); border-radius:20px; padding:28px; max-width:480px; width:92%; animation:popIn .22s ease; box-shadow:0 20px 60px rgba(0,0,0,.15); }
+    @keyframes popIn { from{opacity:0;transform:scale(.93)} to{opacity:1;transform:scale(1)} }
+    .modal-title { font-family:'Syne',sans-serif; font-size:1rem; font-weight:800; color:var(--text-main); margin-bottom:4px; }
+    .modal-sub { font-size:.8rem; color:var(--text-muted); margin-bottom:18px; }
+
+    .statut-options { display:flex; flex-direction:column; gap:10px; margin-bottom:20px; }
+    .statut-option { display:flex; align-items:center; gap:12px; padding:12px 16px; border-radius:12px; border:2px solid var(--border); cursor:pointer; transition:all .15s; }
+    .statut-option:hover { border-color:var(--accent); background:rgba(79,142,247,.04); }
+    .statut-option.selected { border-color:var(--accent); background:rgba(79,142,247,.07); }
+    .statut-option-icon { width:36px; height:36px; border-radius:9px; display:flex; align-items:center; justify-content:center; font-size:.9rem; flex-shrink:0; }
+    .statut-option-label { font-weight:600; font-size:.85rem; color:var(--text-main); }
+    .statut-option-desc { font-size:.74rem; color:var(--text-muted); margin-top:1px; }
+    .statut-option-check { margin-left:auto; color:var(--accent); display:none; }
+    .statut-option.selected .statut-option-check { display:block; }
+    .modal-actions { display:flex; gap:10px; }
+    .btn-confirm { background:var(--accent); color:#fff; border:none; border-radius:10px; padding:11px 24px; font-size:.86rem; font-weight:600; cursor:pointer; flex:1; display:flex; align-items:center; justify-content:center; gap:7px; }
+    .btn-confirm:hover { background:#3a7de8; }
+    .btn-cancel { background:var(--bg); color:var(--text-muted); border:1px solid var(--border); border-radius:10px; padding:11px 18px; font-size:.86rem; cursor:pointer; }
+    .btn-cancel:hover { border-color:var(--accent4); color:var(--accent4); }
+
+    /* Modal photos résolution */
+    .upload-zone { border:2px dashed var(--border); border-radius:12px; padding:24px; text-align:center; cursor:pointer; transition:all .18s; background:var(--bg); }
+    .upload-zone:hover, .upload-zone.drag-over { border-color:var(--accent2); background:rgba(56,217,169,.04); }
+    .upload-zone i { font-size:1.8rem; color:var(--text-muted); display:block; margin-bottom:8px; }
+    .upload-zone p { font-size:.82rem; color:var(--text-muted); margin:0; }
+    .upload-zone p span { color:var(--accent2); font-weight:600; }
+    .photos-preview { display:flex; flex-wrap:wrap; gap:8px; margin-top:12px; }
+    .photo-preview-thumb { position:relative; width:68px; height:68px; border-radius:9px; overflow:hidden; border:1px solid var(--border); }
+    .photo-preview-thumb img { width:100%; height:100%; object-fit:cover; }
+    .photo-preview-thumb button { position:absolute; top:3px; right:3px; background:rgba(0,0,0,.55); color:#fff; border:none; border-radius:50%; width:18px; height:18px; cursor:pointer; font-size:.65rem; display:flex; align-items:center; justify-content:center; }
+
+    /* Lightbox */
+    .lightbox { display:none; position:fixed; inset:0; background:rgba(0,0,0,.85); z-index:2000; align-items:center; justify-content:center; }
+    .lightbox.open { display:flex; }
+    .lightbox img { max-width:90vw; max-height:85vh; border-radius:12px; }
+    .lightbox-close { position:fixed; top:20px; right:24px; color:#fff; font-size:1.6rem; cursor:pointer; background:rgba(255,255,255,.1); border:none; border-radius:50%; width:40px; height:40px; display:flex; align-items:center; justify-content:center; }
+
+    .empty-state { padding:60px 24px; text-align:center; color:var(--text-muted); background:var(--card-bg); border-radius:18px; border:1px solid var(--border); }
+    .empty-state i { font-size:2.5rem; opacity:.2; display:block; margin-bottom:12px; }
+
+    @keyframes slideUp { from{opacity:0;transform:translateY(18px)} to{opacity:1;transform:translateY(0)} }
+    @keyframes spin { to{transform:rotate(360deg);} }
+    @media(max-width:900px) { .stats-row { grid-template-columns:1fr 1fr; } }
+</style>
+
+<!-- PAGE HEADER -->
+<div class="page-header">
+    <div class="page-header-left">
+        <h2><i class="bi bi-exclamation-triangle me-2" style="color:var(--accent);"></i>Signalements de ma mairie</h2>
+        <p th:if="${admin?.mairie != null}" th:text="'Mairie : ' + ${admin.mairie.nom}">Mairie</p>
+    </div>
+    <a th:href="@{/administrateur/rapports/ajouter}"
+       style="background:var(--accent);color:#fff;border:none;border-radius:10px;padding:10px 20px;font-size:.84rem;font-weight:600;text-decoration:none;display:inline-flex;align-items:center;gap:7px;">
+        <i class="bi bi-file-earmark-plus"></i> Rédiger un rapport
+    </a>
+</div>
+
+<!-- STATS -->
+<div class="stats-row">
+    <div class="stat-mini" style="animation-delay:.04s" onclick="filtrerStatut('tous')">
+        <div class="stat-mini-icon" style="background:rgba(79,142,247,.1);color:var(--accent);"><i class="bi bi-clipboard-data"></i></div>
+        <div><div class="stat-mini-value" th:text="${problemes != null ? problemes.size() : 0}">0</div><div class="stat-mini-label">Total</div></div>
+    </div>
+    <div class="stat-mini" style="animation-delay:.08s" onclick="filtrerStatut('SIGNALE')">
+        <div class="stat-mini-icon" style="background:rgba(247,147,79,.1);color:var(--accent3);"><i class="bi bi-flag"></i></div>
+        <div><div class="stat-mini-value" id="countSignale">0</div><div class="stat-mini-label">Signalés</div></div>
+    </div>
+    <div class="stat-mini" style="animation-delay:.12s" onclick="filtrerStatut('EN_COURS')">
+        <div class="stat-mini-icon" style="background:rgba(79,142,247,.1);color:var(--accent);"><i class="bi bi-arrow-repeat"></i></div>
+        <div><div class="stat-mini-value" id="countEnCours">0</div><div class="stat-mini-label">En cours</div></div>
+    </div>
+    <div class="stat-mini" style="animation-delay:.16s" onclick="filtrerStatut('RESOLU')">
+        <div class="stat-mini-icon" style="background:rgba(56,217,169,.1);color:var(--accent2);"><i class="bi bi-check2-circle"></i></div>
+        <div><div class="stat-mini-value" id="countResolu">0</div><div class="stat-mini-label">Résolus</div></div>
+    </div>
+</div>
+
+<!-- FILTRES -->
+<div class="filters-bar">
+    <span class="filter-tab active" onclick="filtrerStatut('tous', this)">Tous</span>
+    <span class="filter-tab" onclick="filtrerStatut('SIGNALE', this)">Signalés</span>
+    <span class="filter-tab" onclick="filtrerStatut('EN_COURS', this)">En cours</span>
+    <span class="filter-tab" onclick="filtrerStatut('RESOLU', this)">Résolus</span>
+    <div class="search-wrap">
+        <i class="bi bi-search"></i>
+        <input type="text" id="searchInput" placeholder="Rechercher...">
+    </div>
+</div>
+
+<!-- FILTRE DATE -->
+<div class="date-filter">
+    <i class="bi bi-calendar-range" style="color:var(--text-muted);"></i>
+    <label>Du</label>
+    <input type="date" id="dateDebut">
+    <label>au</label>
+    <input type="date" id="dateFin">
+    <button class="btn-small" onclick="filtrerDate()"><i class="bi bi-funnel"></i> Filtrer</button>
+    <button class="btn-reset" onclick="reinitDate()"><i class="bi bi-x"></i> Réinitialiser</button>
+</div>
+
+<!-- EMPTY -->
+<div th:if="${problemes == null or problemes.isEmpty()}" class="empty-state">
+    <i class="bi bi-clipboard-check"></i>
+    <p>Aucun signalement assigné à votre mairie.</p>
+</div>
+
+<!-- GRILLE -->
+<div class="problemes-grid" id="problemesGrid" th:unless="${problemes == null or problemes.isEmpty()}">
+
+    <div th:each="p, stat : ${problemes}"
+         class="probleme-card"
+         th:data-statut="${p.statut.name()}"
+         th:data-date="${p.dateSignalement}"
+         th:id="'card-' + ${p.id}"
+         th:style="'animation-delay:' + ${stat.index * 0.05} + 's'">
+
+        <div class="card-stripe" th:classappend="${p.statut.name()}"></div>
+
+        <!-- Photo principale citoyen -->
+        <th:block th:if="${p.photos != null and !p.photos.isEmpty()}">
+            <img class="card-photo" th:src="@{${p.photos[0].chemin}}"
+                 alt="Photo" onclick="openLightbox(this.src)">
+        </th:block>
+        <div class="card-photo-placeholder" th:unless="${p.photos != null and !p.photos.isEmpty()}">
+            <i class="bi bi-image"></i>
+        </div>
+
+        <div class="card-body">
+            <div class="card-top">
+                <div class="card-titre" th:text="${p.titre}">Titre</div>
+                <span th:id="'badge-' + ${p.id}" th:switch="${p.statut.name()}">
+                    <span th:case="'SIGNALE'"  class="statut-badge badge-SIGNALE"><i class="bi bi-flag-fill"></i> Signalé</span>
+                    <span th:case="'EN_COURS'" class="statut-badge badge-EN_COURS"><i class="bi bi-arrow-repeat"></i> En cours</span>
+                    <span th:case="'RESOLU'"   class="statut-badge badge-RESOLU"><i class="bi bi-check-circle-fill"></i> Résolu</span>
+                </span>
+            </div>
+
+            <span class="card-type" th:if="${p.typeProbleme != null}" th:text="${p.typeProbleme.nomType}">Type</span>
+            <div class="card-desc" th:text="${p.description}">Description</div>
+
+            <div class="card-meta">
+                <span><i class="bi bi-geo-alt"></i> <span th:text="${p.quartier}">Quartier</span></span>
+                <span><i class="bi bi-calendar3"></i>
+                    <span th:text="${#temporals.format(p.dateSignalement, 'dd/MM/yyyy')}">Date</span>
+                </span>
+            </div>
+
+            <!-- Temps de résolution -->
+            <div class="temps-resolution" th:if="${p.statut.name() == 'RESOLU' and p.dateResolution != null}">
+                <i class="bi bi-stopwatch"></i>
+                Résolu en <strong th:text="${p.tempsResolutionFormate}">—</strong>
+            </div>
+
+            <!-- Photos citoyen -->
+            <div th:if="${p.photos != null and p.photos.size() > 1}">
+                <div class="section-label-photos"><i class="bi bi-camera me-1"></i>Photos du signalement</div>
+                <div class="card-photos-row">
+                    <th:block th:each="photo, pStat : ${p.photos}" th:if="${pStat.index > 0 and pStat.index < 4}">
+                        <img class="photo-thumb" th:src="@{${photo.chemin}}" alt=""
+                             th:onclick="'openLightbox(\'' + ${photo.chemin} + '\')'">
+                    </th:block>
+                </div>
+            </div>
+
+            <!-- Photos résolution admin -->
+            <div th:if="${p.photosResolution != null and !p.photosResolution.isEmpty()}">
+                <div class="section-label-photos" style="color:var(--accent2);"><i class="bi bi-check-circle me-1"></i>Photos après résolution</div>
+                <div class="card-photos-row">
+                    <th:block th:each="photo, pStat : ${p.photosResolution}" th:if="${pStat.index < 4}">
+                        <img class="photo-thumb" th:src="@{${photo.chemin}}" alt=""
+                             th:onclick="'openLightbox(\'' + ${photo.chemin} + '\')'">
+                    </th:block>
+                </div>
+            </div>
+
+            <!-- Actions -->
+            <div class="card-actions">
+                <button class="btn-action primary"
+                        th:data-id="${p.id}"
+                        th:data-statut="${p.statut.name()}"
+                        th:data-titre="${p.titre}"
+                        onclick="ouvrirModalStatut(this.dataset.id, this.dataset.statut, this.dataset.titre)">
+                    <i class="bi bi-arrow-left-right"></i> Statut
+                </button>
+                <button class="btn-action success"
+                        th:data-id="${p.id}"
+                        onclick="ouvrirModalPhotos(this.dataset.id)">
+                    <i class="bi bi-camera-plus"></i> Photos résolution
+                </button>
+                <a th:href="@{/administrateur/rapports/ajouter(problemeId=${p.id})}"
+                   class="btn-action">
+                    <i class="bi bi-file-earmark-plus"></i> Rapport
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- PAGINATION -->
+<div class="pagination-bar" id="paginationBar"></div>
+
+<!-- MODAL STATUT -->
+<div class="modal-overlay" id="modalStatut">
+    <div class="modal-box">
+        <div class="modal-title">Changer le statut</div>
+        <div class="modal-sub" id="modalTitre">Signalement</div>
+        <div class="statut-options">
+            <div class="statut-option" data-val="SIGNALE" onclick="selectStatut('SIGNALE')">
+                <div class="statut-option-icon" style="background:rgba(247,147,79,.1);color:var(--accent3);"><i class="bi bi-flag-fill"></i></div>
+                <div><div class="statut-option-label">Signalé</div><div class="statut-option-desc">Reçu, pas encore traité</div></div>
+                <i class="bi bi-check-circle-fill statut-option-check"></i>
+            </div>
+            <div class="statut-option" data-val="EN_COURS" onclick="selectStatut('EN_COURS')">
+                <div class="statut-option-icon" style="background:rgba(79,142,247,.1);color:var(--accent);"><i class="bi bi-arrow-repeat"></i></div>
+                <div><div class="statut-option-label">En cours</div><div class="statut-option-desc">Équipes mobilisées</div></div>
+                <i class="bi bi-check-circle-fill statut-option-check"></i>
+            </div>
+            <div class="statut-option" data-val="RESOLU" onclick="selectStatut('RESOLU')">
+                <div class="statut-option-icon" style="background:rgba(56,217,169,.1);color:var(--accent2);"><i class="bi bi-check-circle-fill"></i></div>
+                <div><div class="statut-option-label">Résolu</div><div class="statut-option-desc">Problème clôturé</div></div>
+                <i class="bi bi-check-circle-fill statut-option-check"></i>
+            </div>
+        </div>
+        <div class="modal-actions">
+            <button class="btn-confirm" id="btnConfirm" onclick="confirmerStatut()"><i class="bi bi-check2"></i> Confirmer</button>
+            <button class="btn-cancel" onclick="fermerModal('modalStatut')">Annuler</button>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL PHOTOS RÉSOLUTION -->
+<div class="modal-overlay" id="modalPhotosResolution">
+    <div class="modal-box">
+        <div class="modal-title"><i class="bi bi-camera-plus" style="color:var(--accent2);margin-right:7px;"></i>Photos de résolution</div>
+        <div class="modal-sub">Ajoutez des photos prouvant que le problème a été résolu</div>
+
+        <div class="upload-zone" id="uploadZoneResolution"
+             onclick="document.getElementById('photosResInput').click()">
+            <i class="bi bi-cloud-arrow-up"></i>
+            <p>Cliquez ou glissez vos photos ici — <span>après résolution</span></p>
+            <input type="file" id="photosResInput" multiple accept="image/*" style="display:none;">
+        </div>
+        <div class="photos-preview" id="photosResPreview"></div>
+
+        <div class="modal-actions" style="margin-top:16px;">
+            <button class="btn-confirm" id="btnEnvoyerPhotos" style="background:var(--accent2);" onclick="envoyerPhotosResolution()" disabled>
+                <i class="bi bi-cloud-upload"></i> Envoyer
+            </button>
+            <button class="btn-cancel" onclick="fermerModal('modalPhotosResolution')">Annuler</button>
+        </div>
+    </div>
+</div>
+
+<!-- LIGHTBOX -->
+<div class="lightbox" id="lightbox" onclick="closeLightbox()">
+    <button class="lightbox-close" onclick="closeLightbox()"><i class="bi bi-x"></i></button>
+    <img id="lightboxImg" src="" alt="">
+</div>
+
+<!-- Toast -->
+<div id="toast" style="display:none;position:fixed;top:20px;right:20px;z-index:3000;background:#1a2236;color:#fff;padding:12px 20px;border-radius:12px;font-size:.84rem;box-shadow:0 8px 24px rgba(0,0,0,.2);">
+    <span id="toastMsg"></span>
+</div>
+
+<script th:inline="javascript">
+    const adminId = /*[[${currentUser?.id}]]*/ null;
+    let currentProblemeId = null;
+    let selectedStatut = null;
+    let selectedPhotos = [];
+
+    // ── Pagination ──
+    const PAGE_SIZE = 6;
+    let currentPage = 1;
+    let allCards = [];
+
+    window.addEventListener('load', () => {
+        allCards = [...document.querySelectorAll('.probleme-card')];
+        updateCounts();
+        renderPage();
+    });
+
+    function renderPage() {
+        const visible = allCards.filter(c => c.style.display !== 'none');
+        const total = Math.ceil(visible.length / PAGE_SIZE);
+        visible.forEach((c, i) => {
+            c.style.display = (i >= (currentPage-1)*PAGE_SIZE && i < currentPage*PAGE_SIZE) ? '' : 'none';
+        });
+        renderPagination(total);
+    }
+
+    function renderPagination(total) {
+        const bar = document.getElementById('paginationBar');
+        bar.innerHTML = '';
+        if (total <= 1) return;
+        for (let i = 1; i <= total; i++) {
+            const btn = document.createElement('button');
+            btn.className = 'page-btn' + (i === currentPage ? ' active' : '');
+            btn.textContent = i;
+            btn.onclick = () => { currentPage = i; renderPage(); };
+            bar.appendChild(btn);
+        }
+    }
+
+    // ── Compteurs ──
+    function updateCounts() {
+        let s=0,e=0,r=0;
+        document.querySelectorAll('.probleme-card').forEach(c => {
+            if (c.dataset.statut==='SIGNALE') s++;
+            else if (c.dataset.statut==='EN_COURS') e++;
+            else if (c.dataset.statut==='RESOLU') r++;
+        });
+        document.getElementById('countSignale').textContent = s;
+        document.getElementById('countEnCours').textContent = e;
+        document.getElementById('countResolu').textContent  = r;
+    }
+
+    // ── Filtres ──
+    function filtrerStatut(statut, el) {
+        if (el) {
+            document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
+            el.classList.add('active');
+        }
+        allCards = [...document.querySelectorAll('.probleme-card')];
+        allCards.forEach(c => {
+            c.style.display = (statut==='tous' || c.dataset.statut===statut) ? '' : 'none';
+        });
+        currentPage = 1;
+        renderPage();
+    }
+
+    document.getElementById('searchInput')?.addEventListener('input', function() {
+        const val = this.value.toLowerCase();
+        allCards = [...document.querySelectorAll('.probleme-card')];
+        allCards.forEach(c => c.style.display = c.textContent.toLowerCase().includes(val) ? '' : 'none');
+        currentPage = 1;
+        renderPage();
+    });
+
+    function filtrerDate() {
+        const debut = new Date(document.getElementById('dateDebut').value);
+        const fin   = new Date(document.getElementById('dateFin').value);
+        allCards = [...document.querySelectorAll('.probleme-card')];
+        allCards.forEach(c => {
+            const d = new Date(c.dataset.date);
+            c.style.display = (d >= debut && d <= fin) ? '' : 'none';
+        });
+        currentPage = 1; renderPage();
+    }
+
+    function reinitDate() {
+        document.getElementById('dateDebut').value = '';
+        document.getElementById('dateFin').value = '';
+        allCards = [...document.querySelectorAll('.probleme-card')];
+        allCards.forEach(c => c.style.display = '');
+        currentPage = 1; renderPage();
+    }
+
+    // ── Toast ──
+    function showToast(msg, ok=true) {
+        const t = document.getElementById('toast');
+        document.getElementById('toastMsg').textContent = msg;
+        t.style.background = ok ? '#1a2236' : '#f76f8e';
+        t.style.display = 'block';
+        setTimeout(() => t.style.display = 'none', 3000);
+    }
+
+    // ── Modal statut ──
+    function ouvrirModalStatut(id, statut, titre) {
+        currentProblemeId = id;
+        selectedStatut = statut;
+        document.getElementById('modalTitre').textContent = titre || 'Signalement';
+        selectStatut(statut);
+        document.getElementById('modalStatut').classList.add('open');
+    }
+
+    function selectStatut(val) {
+        selectedStatut = val;
+        document.querySelectorAll('.statut-option').forEach(o =>
+            o.classList.toggle('selected', o.dataset.val===val));
+    }
+
+    function fermerModal(id) {
+        document.getElementById(id).classList.remove('open');
+        if (id==='modalStatut') { currentProblemeId=null; selectedStatut=null; }
+        if (id==='modalPhotosResolution') { currentProblemeId=null; selectedPhotos=[]; document.getElementById('photosResPreview').innerHTML=''; }
+    }
+
+    document.querySelectorAll('.modal-overlay').forEach(m =>
+        m.addEventListener('click', e => { if (e.target===m) m.classList.remove('open'); }));
+
+    async function confirmerStatut() {
+        if (!currentProblemeId || !selectedStatut) return;
+        const btn = document.getElementById('btnConfirm');
+        const orig = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = `<span style="width:13px;height:13px;border:2px solid rgba(255,255,255,.4);border-top-color:#fff;border-radius:50%;display:inline-block;animation:spin .7s linear infinite;margin-right:6px;vertical-align:middle;"></span> En cours...`;
+
+        try {
+            const res = await fetch(
+                `/api/administrateurs/problemes/${currentProblemeId}/statut?nouveauStatut=${selectedStatut}`,
+                { method:'PATCH' }
+            );
+            if (res.ok) {
+                btn.innerHTML = `<i class="bi bi-check2-circle"></i> Enregistré !`;
+                btn.style.background = '#38d9a9';
+                const card = document.getElementById('card-' + currentProblemeId);
+                if (card) {
+                    card.dataset.statut = selectedStatut;
+                    const stripe = card.querySelector('.card-stripe');
+                    if (stripe) stripe.className = 'card-stripe ' + selectedStatut;
+                    const badge = document.getElementById('badge-' + currentProblemeId);
+                    const labels = {SIGNALE:'Signalé',EN_COURS:'En cours',RESOLU:'Résolu'};
+                    const icons  = {SIGNALE:'bi-flag-fill',EN_COURS:'bi-arrow-repeat',RESOLU:'bi-check-circle-fill'};
+                    const bCls   = {SIGNALE:'badge-SIGNALE',EN_COURS:'badge-EN_COURS',RESOLU:'badge-RESOLU'};
+                    if (badge) badge.innerHTML = `<span class="statut-badge ${bCls[selectedStatut]}"><i class="bi ${icons[selectedStatut]}"></i> ${labels[selectedStatut]}</span>`;
+                }
+                updateCounts();
+                showToast('Statut mis à jour !');
+                setTimeout(() => { btn.disabled=false; btn.innerHTML=orig; btn.style.background=''; fermerModal('modalStatut'); }, 1200);
+            } else {
+                showToast('Erreur : ' + await res.text(), false);
+                btn.disabled=false; btn.innerHTML=orig; btn.style.background='';
+            }
+        } catch { showToast('Erreur réseau.', false); btn.disabled=false; btn.innerHTML=orig; }
+    }
+
+    // ── Modal photos résolution ──
+    function ouvrirModalPhotos(id) {
+        currentProblemeId = id;
+        selectedPhotos = [];
+        document.getElementById('photosResPreview').innerHTML = '';
+        document.getElementById('btnEnvoyerPhotos').disabled = true;
+        document.getElementById('photosResInput').value = '';
+        document.getElementById('modalPhotosResolution').classList.add('open');
+    }
+
+    const uploadZone = document.getElementById('uploadZoneResolution');
+    const photosInput = document.getElementById('photosResInput');
+    uploadZone.addEventListener('dragover', e => { e.preventDefault(); uploadZone.classList.add('drag-over'); });
+    uploadZone.addEventListener('dragleave', () => uploadZone.classList.remove('drag-over'));
+    uploadZone.addEventListener('drop', e => { e.preventDefault(); uploadZone.classList.remove('drag-over'); addPhotos([...e.dataTransfer.files]); });
+    photosInput.addEventListener('change', () => addPhotos([...photosInput.files]));
+
+    function addPhotos(files) {
+        files.filter(f => f.type.startsWith('image/')).forEach(f => {
+            if (!selectedPhotos.find(p => p.name===f.name)) selectedPhotos.push(f);
+        });
+        renderPhotoPreviews();
+    }
+
+    function renderPhotoPreviews() {
+        const p = document.getElementById('photosResPreview');
+        p.innerHTML = '';
+        selectedPhotos.forEach((f, i) => {
+            const div = document.createElement('div');
+            div.className = 'photo-preview-thumb';
+            div.innerHTML = `<img src="${URL.createObjectURL(f)}"><button onclick="removePhoto(${i})">×</button>`;
+            p.appendChild(div);
+        });
+        document.getElementById('btnEnvoyerPhotos').disabled = selectedPhotos.length === 0;
+    }
+
+    function removePhoto(i) { selectedPhotos.splice(i, 1); renderPhotoPreviews(); }
+
+    async function envoyerPhotosResolution() {
+        if (!selectedPhotos.length || !currentProblemeId) return;
+        const btn = document.getElementById('btnEnvoyerPhotos');
+        const orig = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = `<span style="width:13px;height:13px;border:2px solid rgba(255,255,255,.4);border-top-color:#fff;border-radius:50%;display:inline-block;animation:spin .7s linear infinite;margin-right:6px;vertical-align:middle;"></span> Envoi...`;
+
+        const fd = new FormData();
+        fd.append('administrateurId', adminId);
+        selectedPhotos.forEach(f => fd.append('photos', f));
+
+        try {
+            const res = await fetch(
+                `/api/administrateurs/problemes/${currentProblemeId}/photos-resolution`,
+                { method:'POST', body:fd }
+            );
+            if (res.ok) {
+                btn.innerHTML = `<i class="bi bi-check2-circle"></i> Envoyées !`;
+                btn.style.background = '#38d9a9';
+                showToast('Photos de résolution ajoutées !');
+                setTimeout(() => { window.location.reload(); }, 1300);
+            } else {
+                showToast('Erreur : ' + await res.text(), false);
+                btn.disabled=false; btn.innerHTML=orig; btn.style.background='';
+            }
+        } catch { showToast('Erreur réseau.', false); btn.disabled=false; btn.innerHTML=orig; }
+    }
+
+    // ── Lightbox ──
+    function openLightbox(src) {
+        document.getElementById('lightboxImg').src = src;
+        document.getElementById('lightbox').classList.add('open');
+        event.stopPropagation();
+    }
+    function closeLightbox() { document.getElementById('lightbox').classList.remove('open'); }
+    document.addEventListener('keydown', e => { if (e.key==='Escape') { fermerModal('modalStatut'); fermerModal('modalPhotosResolution'); closeLightbox(); }});
+</script>
+</div>
+</body>
+</html>

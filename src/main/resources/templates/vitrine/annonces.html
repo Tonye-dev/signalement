@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+<div th:fragment="content">
+<style>
+    :root { --accent:#4f8ef7; --accent2:#38d9a9; --accent3:#f7934f; --accent4:#f76f8e; --accent5:#a78bfa; --bg:#f0f4fb; --card-bg:#fff; --text-main:#1a2236; --text-muted:#7b8fb5; --border:#e4eaf5; }
+    .back-link { display:inline-flex; align-items:center; gap:6px; font-size:.82rem; color:var(--text-muted); text-decoration:none; margin-bottom:20px; transition:color .15s; }
+    .back-link:hover { color:var(--accent); }
+    .page-header { margin-bottom:20px; }
+    .page-header h2 { font-family:'Syne',sans-serif; font-size:1.2rem; font-weight:800; color:var(--text-main); margin:0; }
+    .page-header p { font-size:.82rem; color:var(--text-muted); margin:4px 0 0; }
+
+    .filters-bar { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:20px; }
+    .filter-tab { background:var(--card-bg); border:1px solid var(--border); border-radius:50px; padding:5px 14px; font-size:.76rem; font-weight:600; color:var(--text-muted); cursor:pointer; transition:all .15s; user-select:none; }
+    .filter-tab.active { background:rgba(79,142,247,.1); border-color:rgba(79,142,247,.3); color:var(--accent); }
+
+    .annonces-list { display:flex; flex-direction:column; gap:14px; }
+    .annonce-card { background:var(--card-bg); border-radius:16px; border:1px solid var(--border); border-left:4px solid transparent; padding:20px; animation:slideUp .4s ease both; transition:box-shadow .2s; }
+    .annonce-card:hover { box-shadow:0 8px 24px rgba(0,0,0,.07); }
+    .annonce-card.SECURITE    { border-left-color:var(--accent4); }
+    .annonce-card.TRAVAUX     { border-left-color:var(--accent3); }
+    .annonce-card.EMPLOI      { border-left-color:var(--accent2); }
+    .annonce-card.EVENEMENTS  { border-left-color:var(--accent5); }
+    .annonce-card.ARRETE      { border-left-color:var(--text-main); }
+    .annonce-card.SANTE       { border-left-color:#e74c3c; }
+    .annonce-card.TRANSPORT   { border-left-color:var(--accent); }
+    .annonce-card.URBANISME   { border-left-color:var(--accent); }
+    .annonce-card.MARCHE_PUBLIC { border-left-color:#27ae60; }
+    .annonce-card.ENVIRONNEMENT { border-left-color:#27ae60; }
+    .annonce-card.CULTURE     { border-left-color:#e67e22; }
+    .annonce-card.AUTRE       { border-left-color:var(--text-muted); }
+
+    .annonce-top { display:flex; align-items:flex-start; justify-content:space-between; gap:10px; margin-bottom:10px; }
+    .annonce-titre { font-family:'Syne',sans-serif; font-weight:700; font-size:.92rem; color:var(--text-main); }
+    .annonce-contenu { font-size:.83rem; color:var(--text-muted); line-height:1.55; margin-bottom:12px; }
+    .annonce-footer { display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+    .annonce-date { font-size:.74rem; color:var(--text-muted); display:flex; align-items:center; gap:4px; }
+
+    .cat-badge { display:inline-flex; align-items:center; gap:4px; border-radius:50px; padding:3px 10px; font-size:.72rem; font-weight:700; text-transform:uppercase; letter-spacing:.04em; }
+    .SECURITE    { background:rgba(247,111,142,.1); color:var(--accent4); }
+    .TRAVAUX     { background:rgba(247,147,79,.1);  color:var(--accent3); }
+    .EMPLOI      { background:rgba(56,217,169,.1);  color:var(--accent2); }
+    .EVENEMENTS  { background:rgba(167,139,250,.1); color:var(--accent5); }
+    .ARRETE      { background:rgba(26,34,54,.08);   color:var(--text-main); }
+    .SANTE       { background:rgba(231,76,60,.1);   color:#e74c3c; }
+    .TRANSPORT   { background:rgba(79,142,247,.1);  color:var(--accent); }
+    .URBANISME   { background:rgba(79,142,247,.1);  color:var(--accent); }
+    .MARCHE_PUBLIC { background:rgba(39,174,96,.1); color:#27ae60; }
+    .ENVIRONNEMENT { background:rgba(39,174,96,.1); color:#27ae60; }
+    .CULTURE     { background:rgba(230,126,34,.1);  color:#e67e22; }
+    .AUTRE       { background:rgba(123,143,181,.1); color:var(--text-muted); }
+
+    .arrete-badge { background:rgba(26,34,54,.08); color:var(--text-main); border-radius:50px; padding:2px 9px; font-size:.7rem; font-weight:700; display:inline-flex; align-items:center; gap:4px; }
+
+    .empty-state { padding:60px; text-align:center; color:var(--text-muted); background:var(--card-bg); border-radius:18px; border:1px solid var(--border); }
+    .empty-state i { font-size:2.5rem; opacity:.2; display:block; margin-bottom:12px; }
+
+    @keyframes slideUp { from{opacity:0;transform:translateY(18px)} to{opacity:1;transform:translateY(0)} }
+</style>
+
+<a th:href="@{/mairies/{id}(id=${mairie.id})}" class="back-link">
+    <i class="bi bi-arrow-left"></i> Retour à la vitrine
+</a>
+
+<div class="page-header">
+    <h2><i class="bi bi-megaphone me-2" style="color:var(--accent3);"></i>
+        Annonces — <span th:text="${mairie.nom}">Mairie</span>
+    </h2>
+    <p>Toutes les annonces et arrêtés publiés par la mairie, du plus récent au plus ancien</p>
+</div>
+
+<!-- Filtres -->
+<div class="filters-bar">
+    <span class="filter-tab active" onclick="filtrer('TOUS', this)">Toutes</span>
+    <span class="filter-tab" onclick="filtrer('SECURITE', this)">🔒 Sécurité</span>
+    <span class="filter-tab" onclick="filtrer('TRAVAUX', this)">🚧 Travaux</span>
+    <span class="filter-tab" onclick="filtrer('EMPLOI', this)">💼 Emploi</span>
+    <span class="filter-tab" onclick="filtrer('EVENEMENTS', this)">🎭 Événements</span>
+    <span class="filter-tab" onclick="filtrer('ARRETE', this)">📋 Arrêtés</span>
+    <span class="filter-tab" onclick="filtrer('SANTE', this)">🏥 Santé</span>
+    <span class="filter-tab" onclick="filtrer('TRANSPORT', this)">🚌 Transport</span>
+</div>
+
+<div th:if="${annonces == null or annonces.isEmpty()}" class="empty-state">
+    <i class="bi bi-megaphone"></i>
+    <p>Aucune annonce publiée pour le moment.</p>
+</div>
+
+<div class="annonces-list" th:unless="${annonces == null or annonces.isEmpty()}">
+    <div th:each="a, stat : ${annonces}"
+         class="annonce-card"
+         th:classappend="${a.categorie.name()}"
+         th:data-cat="${a.categorie.name()}"
+         th:style="'animation-delay:' + ${stat.index * 0.06} + 's'">
+
+        <div class="annonce-top">
+            <div>
+                <span th:classappend="${a.categorie.name()}" class="cat-badge"
+                      th:text="${a.categorie.name()}">Catégorie</span>
+                <span th:if="${a.estArrete}" class="arrete-badge" style="margin-left:6px;">
+                    <i class="bi bi-patch-check-fill"></i> Arrêté officiel
+                </span>
+                <div class="annonce-titre" th:text="${a.titre}" style="margin-top:8px;">Titre</div>
+            </div>
+            <span class="annonce-date">
+                <i class="bi bi-calendar3"></i>
+                <span th:text="${#temporals.format(a.datePublication, 'dd/MM/yyyy')}">Date</span>
+            </span>
+        </div>
+
+        <div class="annonce-contenu" th:text="${a.contenu}">Contenu...</div>
+    </div>
+</div>
+
+<script>
+    function filtrer(cat, el) {
+        document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
+        el.classList.add('active');
+        document.querySelectorAll('.annonce-card').forEach(c =>
+            c.style.display = (cat === 'TOUS' || c.dataset.cat === cat) ? '' : 'none');
+    }
+</script>
+</div>
+</body>
+</html>

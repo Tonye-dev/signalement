@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+<div th:fragment="content">
+<style>
+    :root { --accent:#4f8ef7; --accent2:#38d9a9; --accent3:#f7934f; --accent4:#f76f8e; --bg:#f0f4fb; --card-bg:#fff; --text-main:#1a2236; --text-muted:#7b8fb5; --border:#e4eaf5; }
+    .back-link { display:inline-flex; align-items:center; gap:6px; font-size:.82rem; color:var(--text-muted); text-decoration:none; margin-bottom:20px; transition:color .15s; }
+    .back-link:hover { color:var(--accent); }
+
+    /* Hero mairie */
+    .hero { border-radius:20px; overflow:hidden; margin-bottom:24px; position:relative; background:linear-gradient(135deg,#1a2236,#2a3a5c); animation:slideUp .4s ease both; }
+    .hero-photo { width:100%; height:220px; object-fit:cover; opacity:.6; display:block; }
+    .hero-placeholder { width:100%; height:220px; display:flex; align-items:center; justify-content:center; font-size:4rem; color:rgba(255,255,255,.2); }
+    .hero-body { position:absolute; bottom:0; left:0; right:0; padding:24px; background:linear-gradient(to top, rgba(26,34,54,.95), transparent); }
+    .hero-nom { font-family:'Syne',sans-serif; font-size:1.6rem; font-weight:800; color:#fff; margin-bottom:4px; }
+    .hero-adresse { font-size:.84rem; color:rgba(255,255,255,.7); display:flex; align-items:center; gap:6px; }
+
+    /* Infos contact */
+    .info-row { display:flex; gap:12px; margin-bottom:24px; flex-wrap:wrap; animation:slideUp .4s ease .05s both; }
+    .info-chip { background:var(--card-bg); border:1px solid var(--border); border-radius:10px; padding:10px 16px; font-size:.8rem; color:var(--text-muted); display:flex; align-items:center; gap:7px; }
+    .info-chip i { color:var(--accent); }
+
+    /* Description */
+    .desc-card { background:var(--card-bg); border:1px solid var(--border); border-radius:16px; padding:20px; margin-bottom:24px; animation:slideUp .4s ease .1s both; }
+    .desc-card p { font-size:.85rem; color:var(--text-main); line-height:1.65; margin:0; }
+
+    /* 3 menus */
+    .menus-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:16px; animation:slideUp .4s ease .15s both; }
+    .menu-card { background:var(--card-bg); border:1px solid var(--border); border-radius:18px; padding:28px 20px; text-align:center; text-decoration:none; display:block; transition:transform .2s,box-shadow .2s,border-color .2s; }
+    .menu-card:hover { transform:translateY(-5px); box-shadow:0 12px 32px rgba(0,0,0,.09); border-color:rgba(79,142,247,.3); }
+    .menu-icon { width:56px; height:56px; border-radius:16px; display:flex; align-items:center; justify-content:center; font-size:1.4rem; margin:0 auto 14px; }
+    .menu-label { font-family:'Syne',sans-serif; font-weight:700; font-size:.92rem; color:var(--text-main); margin-bottom:6px; }
+    .menu-desc { font-size:.76rem; color:var(--text-muted); line-height:1.4; }
+
+    @keyframes slideUp { from{opacity:0;transform:translateY(18px)} to{opacity:1;transform:translateY(0)} }
+    @media(max-width:600px) { .menus-grid { grid-template-columns:1fr; } }
+</style>
+
+<a th:href="@{/mairies}" class="back-link">
+    <i class="bi bi-arrow-left"></i> Toutes les mairies
+</a>
+
+<!-- Hero -->
+<div class="hero">
+    <img th:if="${mairie.photoPath != null}" th:src="@{${mairie.photoPath}}"
+         alt="" class="hero-photo">
+    <div th:unless="${mairie.photoPath != null}" class="hero-placeholder">
+        <i class="bi bi-building"></i>
+    </div>
+    <div class="hero-body">
+        <div class="hero-nom" th:text="${mairie.nom}">Nom</div>
+        <div class="hero-adresse">
+            <i class="bi bi-geo-alt-fill"></i>
+            <span th:text="${mairie.adresse}">Adresse</span>
+        </div>
+    </div>
+</div>
+
+<!-- Infos contact -->
+<div class="info-row">
+    <div class="info-chip" th:if="${mairie.telephone != null}">
+        <i class="bi bi-telephone"></i> <span th:text="${mairie.telephone}">Tél</span>
+    </div>
+    <div class="info-chip" th:if="${mairie.emailOfficiel != null}">
+        <i class="bi bi-envelope"></i> <span th:text="${mairie.emailOfficiel}">Email</span>
+    </div>
+    <div class="info-chip" th:if="${mairie.horaires != null}">
+        <i class="bi bi-clock"></i> <span th:text="${mairie.horaires}">Horaires</span>
+    </div>
+</div>
+
+<!-- Description -->
+<div class="desc-card" th:if="${mairie.description != null}">
+    <p th:text="${mairie.description}">Description de la mairie...</p>
+</div>
+
+<!-- 3 menus -->
+<div class="menus-grid">
+    <a th:href="@{/mairies/{id}/annonces(id=${mairie.id})}" class="menu-card">
+        <div class="menu-icon" style="background:rgba(247,147,79,.1);color:var(--accent3);">
+            <i class="bi bi-megaphone"></i>
+        </div>
+        <div class="menu-label">Annonces</div>
+        <div class="menu-desc">Arrêtés, offres d'emploi, travaux et autres annonces officielles</div>
+    </a>
+
+    <a th:href="@{/mairies/{id}/services(id=${mairie.id})}" class="menu-card">
+        <div class="menu-icon" style="background:rgba(79,142,247,.1);color:var(--accent);">
+            <i class="bi bi-grid-3x3-gap"></i>
+        </div>
+        <div class="menu-label">Services</div>
+        <div class="menu-desc">État civil, urbanisme, taxes locales et autres services municipaux</div>
+    </a>
+
+    <a th:href="@{/mairies/{id}/personnel(id=${mairie.id})}" class="menu-card">
+        <div class="menu-icon" style="background:rgba(56,217,169,.1);color:var(--accent2);">
+            <i class="bi bi-people"></i>
+        </div>
+        <div class="menu-label">Personnel</div>
+        <div class="menu-desc">Maire, adjoints, chefs de service et agents municipaux</div>
+    </a>
+</div>
+</div>
+</body>
+</html>

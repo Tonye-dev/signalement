@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="fr"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${pageTitle != null ? 'ASPU — ' + pageTitle : 'ASPU'}">ASPU</title>
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,400&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <style>
+        :root {
+            --sidebar-width: 260px;
+            --bg: #f0f4fb; --card-bg: #fff;
+            --text-main: #1a2236; --text-muted: #7b8fb5; --border: #e4eaf5;
+            --accent: #4f8ef7; --accent2: #38d9a9; --accent3: #f7934f; --accent4: #f76f8e;
+        }
+        * { box-sizing: border-box; }
+        body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text-main); margin: 0; min-height: 100vh; display: flex; }
+        .main-wrapper { display: flex; width: 100%; }
+        .main-content { margin-left: var(--sidebar-width); flex: 1; display: flex; flex-direction: column; min-height: 100vh; }
+        .page-content { flex: 1; padding: 28px 32px; }
+        .aspu-footer { background: var(--card-bg); border-top: 1px solid var(--border); text-align: center; padding: 14px 32px; font-size: .75rem; color: var(--text-muted); }
+        ::-webkit-scrollbar { width: 5px; } ::-webkit-scrollbar-track { background: transparent; } ::-webkit-scrollbar-thumb { background: #d0daf0; border-radius: 10px; }
+
+        /* ══ SIDEBAR ══ */
+        #sidebar-wrapper {
+            width: var(--sidebar-width); min-height: 100vh;
+            background: linear-gradient(180deg, #0d1117 0%, #161b27 60%, #0d1117 100%);
+            display: flex; flex-direction: column;
+            position: fixed; top: 0; left: 0; bottom: 0;
+            z-index: 200; border-right: 1px solid rgba(255,255,255,.05);
+            overflow-y: auto;
+        }
+        #sidebar-wrapper::-webkit-scrollbar { width: 3px; }
+        #sidebar-wrapper::-webkit-scrollbar-thumb { background: rgba(255,255,255,.1); border-radius: 3px; }
+        .sb-logo { padding: 26px 24px 20px; border-bottom: 1px solid rgba(255,255,255,.06); display: flex; align-items: center; gap: 11px; flex-shrink: 0; }
+        .sb-logo-icon { width: 36px; height: 36px; background: linear-gradient(135deg, #4f8ef7, #38d9a9); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: .9rem; color: #fff; font-weight: 800; flex-shrink: 0; }
+        .sb-logo-text { font-family: 'Syne', sans-serif; font-size: 1.1rem; font-weight: 800; color: #fff; letter-spacing: .04em; }
+        .sb-section-label { padding: 18px 24px 5px; font-size: .6rem; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: rgba(255,255,255,.18); }
+        .sb-nav { flex: 1; padding: 8px 12px; }
+        .sb-link { display: flex; align-items: center; gap: 11px; padding: 10px 14px; border-radius: 10px; color: rgba(255,255,255,.45); text-decoration: none; font-size: .84rem; font-weight: 500; margin-bottom: 2px; transition: all .18s ease; position: relative; overflow: hidden; }
+        .sb-link::before { content: ''; position: absolute; inset: 0; background: linear-gradient(90deg, rgba(79,142,247,.12), transparent); opacity: 0; transition: opacity .18s; border-radius: 10px; }
+        .sb-link:hover { color: #fff; }
+        .sb-link:hover::before { opacity: 1; }
+        .sb-link.active { color: #fff; background: rgba(79,142,247,.15); border: 1px solid rgba(79,142,247,.25); }
+        .sb-link.active .sb-link-icon { color: #4f8ef7; }
+        .sb-link-icon { font-size: 1rem; min-width: 18px; text-align: center; flex-shrink: 0; }
+        .sb-link.sb-action { background: rgba(79,142,247,.1); color: rgba(255,255,255,.85); border: 1px solid rgba(79,142,247,.2); margin-bottom: 8px; font-weight: 600; }
+        .sb-link.sb-action:hover { background: rgba(79,142,247,.2); color: #fff; }
+        .sb-link.sb-action .sb-link-icon { color: #4f8ef7; }
+        .sb-divider { margin: 8px 12px; border: none; border-top: 1px solid rgba(255,255,255,.05); }
+        .sb-footer { padding: 16px 24px; border-top: 1px solid rgba(255,255,255,.05); flex-shrink: 0; }
+        .sb-logout { display: flex; align-items: center; gap: 10px; padding: 9px 14px; border-radius: 10px; color: rgba(247,111,142,.55); text-decoration: none; font-size: .83rem; font-weight: 500; transition: all .18s ease; }
+        .sb-logout:hover { color: #f76f8e; background: rgba(247,111,142,.08); }
+        .sb-copyright { font-size: .62rem; color: rgba(255,255,255,.1); margin-top: 10px; text-align: center; }
+
+        /* ══ TOPBAR ══ */
+        .aspu-topbar { position: sticky; top: 0; z-index: 100; background: rgba(255,255,255,.96); backdrop-filter: blur(12px); border-bottom: 1px solid #e4eaf5; padding: 0 32px; height: 64px; display: flex; align-items: center; justify-content: space-between; }
+        .topbar-left h1 { font-family: 'Syne', sans-serif; font-size: 1.15rem; font-weight: 700; color: #1a2236; margin: 0; }
+        .topbar-left p { font-size: .73rem; color: #7b8fb5; margin: 0; }
+        .topbar-actions { display: flex; align-items: center; gap: 10px; }
+        .topbar-date { background: #f0f4fb; border: 1px solid #e4eaf5; border-radius: 50px; padding: 5px 14px; font-size: .75rem; color: #7b8fb5; display: flex; align-items: center; gap: 6px; }
+        .topbar-user { display: flex; align-items: center; gap: 10px; background: #f0f4fb; border: 1px solid #e4eaf5; border-radius: 50px; padding: 4px 16px 4px 4px; cursor: pointer; transition: all .18s; text-decoration: none; position: relative; }
+        .topbar-user:hover { border-color: #4f8ef7; background: #fff; box-shadow: 0 4px 14px rgba(79,142,247,.12); }
+        .topbar-avatar-photo { width: 34px; height: 34px; border-radius: 50%; object-fit: cover; border: 2px solid #fff; box-shadow: 0 2px 6px rgba(0,0,0,.1); flex-shrink: 0; display: block; }
+        .topbar-avatar-placeholder { width: 34px; height: 34px; border-radius: 50%; background: #dde3f0; border: 2px solid #fff; flex-shrink: 0; display: flex; align-items: center; justify-content: center; color: #7b8fb5; font-size: 1rem; }
+        .topbar-username { font-size: .82rem; font-weight: 600; color: #1a2236; white-space: nowrap; }
+        .topbar-chevron { font-size: .72rem; color: #b0bece; }
+        .topbar-dropdown { position: absolute; top: calc(100% + 10px); right: 0; background: #fff; border: 1px solid #e4eaf5; border-radius: 14px; box-shadow: 0 12px 40px rgba(0,0,0,.12); min-width: 220px; padding: 8px; display: none; z-index: 300; animation: dropIn .18s ease; }
+        @keyframes dropIn { from { opacity:0; transform:translateY(-8px); } to { opacity:1; transform:translateY(0); } }
+        .topbar-user:hover .topbar-dropdown, .topbar-user:focus-within .topbar-dropdown { display: block; }
+        .dd-header { padding: 12px 14px; border-bottom: 1px solid #f0f4fb; margin-bottom: 6px; display: flex; align-items: center; gap: 12px; }
+        .dd-header-photo { width: 44px; height: 44px; border-radius: 50%; object-fit: cover; flex-shrink: 0; border: 2px solid #e4eaf5; }
+        .dd-header-placeholder { width: 44px; height: 44px; border-radius: 50%; background: #dde3f0; flex-shrink: 0; display: flex; align-items: center; justify-content: center; color: #7b8fb5; font-size: 1.2rem; border: 2px solid #e4eaf5; }
+        .dd-header-name { font-size: .85rem; font-weight: 700; color: #1a2236; }
+        .dd-header-email { font-size: .72rem; color: #7b8fb5; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 140px; }
+        .dd-item { display: flex; align-items: center; gap: 9px; padding: 9px 12px; border-radius: 9px; font-size: .82rem; color: #1a2236; text-decoration: none; font-weight: 500; transition: background .15s; }
+        .dd-item:hover { background: #f0f4fb; color: #1a2236; }
+        .dd-item i { font-size: .95rem; color: #7b8fb5; width: 16px; flex-shrink: 0; }
+        .dd-divider { border: none; border-top: 1px solid #f0f4fb; margin: 5px 0; }
+        .dd-item.dd-logout { color: #f76f8e; }
+        .dd-item.dd-logout i { color: #f76f8e; }
+        .dd-item.dd-logout:hover { background: rgba(247,111,142,.06); }
+        .sb-toggle { display: none; background: none; border: none; font-size: 1.3rem; color: #1a2236; cursor: pointer; padding: 4px 8px; }
+        @media (max-width: 768px) { .sb-toggle { display: block; } .topbar-date { display: none; } .aspu-topbar { padding: 0 16px; } .main-content { margin-left: 0; } .page-content { padding: 18px 16px; } }
+
+        /* ══ PANNEAU NOTIFICATIONS ══ */
+        .notif-btn { position:relative; width:38px; height:38px; border-radius:50%; background:#f0f4fb; border:1px solid #e4eaf5; display:flex; align-items:center; justify-content:center; cursor:pointer; transition:all .18s; color:#7b8fb5; font-size:1rem; flex-shrink:0; }
+        .notif-btn:hover { border-color:#4f8ef7; color:#4f8ef7; background:#fff; }
+        .notif-badge { position:absolute; top:-3px; right:-3px; background:#f76f8e; color:#fff; border-radius:50%; width:17px; height:17px; font-size:.6rem; font-weight:700; display:flex; align-items:center; justify-content:center; border:2px solid #fff; animation:pulse 2s infinite; }
+        @keyframes pulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.15)} }
+        .notif-overlay { display:none; position:fixed; inset:0; z-index:400; }
+        .notif-overlay.open { display:block; }
+        .notif-panel { position:fixed; top:0; right:0; bottom:0; width:360px; background:#fff; border-left:1px solid #e4eaf5; z-index:500; display:flex; flex-direction:column; transform:translateX(100%); transition:transform .28s cubic-bezier(.4,0,.2,1); box-shadow:-8px 0 32px rgba(0,0,0,.1); }
+        .notif-panel.open { transform:translateX(0); }
+        .notif-header { padding:20px; border-bottom:1px solid #e4eaf5; display:flex; align-items:center; justify-content:space-between; flex-shrink:0; }
+        .notif-header-title { font-family:'Syne',sans-serif; font-weight:700; font-size:.95rem; color:#1a2236; display:flex; align-items:center; gap:8px; }
+        .notif-header-title i { color:#4f8ef7; }
+        .btn-notif-lues { background:none; border:1px solid #e4eaf5; border-radius:8px; padding:5px 10px; font-size:.74rem; color:#7b8fb5; cursor:pointer; transition:all .15s; }
+        .btn-notif-lues:hover { border-color:#4f8ef7; color:#4f8ef7; }
+        .btn-notif-close { background:none; border:none; font-size:1.2rem; color:#7b8fb5; cursor:pointer; padding:4px; transition:color .15s; }
+        .btn-notif-close:hover { color:#f76f8e; }
+        .notif-list { flex:1; overflow-y:auto; padding:12px; }
+        .notif-item { padding:14px; border-radius:12px; margin-bottom:8px; cursor:pointer; transition:background .15s; border:1px solid transparent; }
+        .notif-item:hover { background:#f8faff; }
+        .notif-item.non-lue { background:rgba(79,142,247,.05); border-color:rgba(79,142,247,.1); }
+        .notif-item-titre { font-weight:600; font-size:.84rem; color:#1a2236; margin-bottom:4px; display:flex; align-items:center; gap:6px; }
+        .notif-dot { width:7px; height:7px; border-radius:50%; background:#4f8ef7; flex-shrink:0; }
+        .notif-item-msg { font-size:.78rem; color:#7b8fb5; line-height:1.5; overflow:hidden; max-height:2.8em; }
+        .notif-item-date { font-size:.7rem; color:#b0bece; margin-top:6px; }
+        .notif-empty { padding:40px 20px; text-align:center; color:#7b8fb5; }
+        .notif-empty i { font-size:2rem; opacity:.2; display:block; margin-bottom:10px; }
+        @media(max-width:480px) { .notif-panel { width:100%; } }
+    </style>
+</head>
+<body>
+<div class="main-wrapper">
+
+    <!-- ══════════════ SIDEBAR ══════════════ -->
+    <div id="sidebar-wrapper">
+        <div class="sb-logo">
+            <div class="sb-logo-icon">A</div>
+            <span class="sb-logo-text">ASPU</span>
+        </div>
+
+        <nav class="sb-nav">
+
+            <!-- ── SUPER ADMIN ── -->
+            <div sec:authorize="hasRole('SUPERADMIN')">
+                <div class="sb-section-label">Général</div>
+                <a th:href="@{/superadmin/dashboard}" class="sb-link">
+                    <i class="bi bi-speedometer2 sb-link-icon"></i> Tableau de bord
+                </a>
+                <hr class="sb-divider">
+                <div class="sb-section-label">Mairies</div>
+                <a th:href="@{/superadmin/mairies}" class="sb-link">
+                    <i class="bi bi-building sb-link-icon"></i> Liste des mairies
+                </a>
+                <a th:href="@{/superadmin/mairies/ajouter}" class="sb-link">
+                    <i class="bi bi-building-add sb-link-icon"></i> Ajouter une mairie
+                </a>
+                <hr class="sb-divider">
+                <div class="sb-section-label">Gestion des comptes</div>
+                <a th:href="@{/superadmin/administrateurs}" class="sb-link">
+                    <i class="bi bi-person-badge sb-link-icon"></i> Administrateurs
+                </a>
+                <a th:href="@{/superadmin/administrateurs/ajouter}" class="sb-link">
+                    <i class="bi bi-person-plus sb-link-icon"></i> Ajouter un administrateur
+                </a>
+                <a th:href="@{/superadmin/utilisateurs}" class="sb-link">
+                    <i class="bi bi-people sb-link-icon"></i> Tous les utilisateurs
+                </a>
+                <hr class="sb-divider">
+                <div class="sb-section-label">Configuration</div>
+                <a th:href="@{/superadmin/types-problemes}" class="sb-link">
+                    <i class="bi bi-tags sb-link-icon"></i> Types de problèmes
+                </a>
+                <hr class="sb-divider">
+                <div class="sb-section-label">Mon compte</div>
+                <a th:href="@{/superadmin/profil}" class="sb-link">
+                    <i class="bi bi-person-circle sb-link-icon"></i> Mon profil
+                </a>
+            </div>
+
+            <!-- ── ADMINISTRATEUR ── -->
+            <div sec:authorize="hasRole('ADMINISTRATEUR')">
+                <div class="sb-section-label">Général</div>
+                <a th:href="@{/administrateur/dashboard}" class="sb-link">
+                    <i class="bi bi-speedometer2 sb-link-icon"></i> Tableau de bord
+                </a>
+                <hr class="sb-divider">
+                <div class="sb-section-label">Signalements</div>
+                <a th:href="@{/administrateur/problemes}" class="sb-link">
+                    <i class="bi bi-exclamation-triangle sb-link-icon"></i> Tous les signalements
+                </a>
+                <a th:href="@{/administrateur/problemes/en-attente}" class="sb-link">
+                    <i class="bi bi-hourglass-split sb-link-icon"></i> En attente
+                </a>
+                <a th:href="@{/administrateur/problemes/en-cours}" class="sb-link">
+                    <i class="bi bi-arrow-repeat sb-link-icon"></i> En cours de traitement
+                </a>
+                <a th:href="@{/administrateur/problemes/resolus}" class="sb-link">
+                    <i class="bi bi-check2-circle sb-link-icon"></i> Résolus
+                </a>
+                <hr class="sb-divider">
+                <div class="sb-section-label">Rapports</div>
+                <a th:href="@{/administrateur/rapports}" class="sb-link">
+                    <i class="bi bi-file-earmark-text sb-link-icon"></i> Mes rapports
+                </a>
+                <a th:href="@{/administrateur/rapports/ajouter}" class="sb-link">
+                    <i class="bi bi-file-earmark-plus sb-link-icon"></i> Rédiger un rapport
+                </a>
+                <hr class="sb-divider">
+                <div class="sb-section-label">Annonces</div>
+                <a th:href="@{/administrateur/annonces}" class="sb-link">
+                    <i class="bi bi-megaphone sb-link-icon"></i> Mes annonces
+                </a>
+                <hr class="sb-divider">
+                <div class="sb-section-label">Vitrine mairie</div>
+                <a th:href="@{/administrateur/vitrine/profil}" class="sb-link">
+                    <i class="bi bi-building sb-link-icon"></i> Profil de la mairie
+                </a>
+                <a th:href="@{/administrateur/vitrine/services}" class="sb-link">
+                    <i class="bi bi-grid-3x3-gap sb-link-icon"></i> Nos services
+                </a>
+                <a th:href="@{/administrateur/vitrine/personnel}" class="sb-link">
+                    <i class="bi bi-people sb-link-icon"></i> Notre personnel
+                </a>
+                <hr class="sb-divider">
+                <div class="sb-section-label">Mon compte</div>
+                <a th:href="@{/administrateur/profil}" class="sb-link">
+                    <i class="bi bi-person-circle sb-link-icon"></i> Mon profil
+                </a>
+                <a th:href="@{/administrateur/profil/modifier}" class="sb-link">
+                    <i class="bi bi-pencil-square sb-link-icon"></i> Modifier mes informations
+                </a>
+            </div>
+
+            <!-- ── CITOYEN ── -->
+            <div sec:authorize="hasRole('CITOYEN')">
+                <div class="sb-section-label">Général</div>
+                <a th:href="@{/citoyen/dashboard}" class="sb-link">
+                    <i class="bi bi-speedometer2 sb-link-icon"></i> Tableau de bord
+                </a>
+                <hr class="sb-divider">
+                <div class="sb-section-label">Mes signalements</div>
+                <a th:href="@{/citoyen/signaler}" class="sb-link sb-action">
+                    <i class="bi bi-plus-circle sb-link-icon"></i> Signaler un problème
+                </a>
+                <a th:href="@{/citoyen/mes-signalements}" class="sb-link">
+                    <i class="bi bi-list-ul sb-link-icon"></i> Tous mes signalements
+                </a>
+                <a th:href="@{/citoyen/mes-signalements/en-cours}" class="sb-link">
+                    <i class="bi bi-arrow-repeat sb-link-icon"></i> En cours de traitement
+                </a>
+                <a th:href="@{/citoyen/mes-signalements/resolus}" class="sb-link">
+                    <i class="bi bi-check2-circle sb-link-icon"></i> Résolus
+                </a>
+                <hr class="sb-divider">
+                <div class="sb-section-label">Explorer</div>
+                <a th:href="@{/mairies}" class="sb-link">
+                    <i class="bi bi-building sb-link-icon"></i> Les mairies
+                </a>
+                <a th:href="@{/citoyen/annonces}" class="sb-link">
+                    <i class="bi bi-megaphone sb-link-icon"></i> Annonces des mairies
+                </a>
+                <a th:href="@{/citoyen/problemes-quartier}" class="sb-link">
+                    <i class="bi bi-pin-map sb-link-icon"></i> Problèmes par quartier
+                </a>
+                <hr class="sb-divider">
+                <div class="sb-section-label">Notifications</div>
+                <a th:href="@{/citoyen/preferences-notifications}" class="sb-link">
+                    <i class="bi bi-bell sb-link-icon"></i> Mes préférences
+                </a>
+                <hr class="sb-divider">
+                <div class="sb-section-label">Mon compte</div>
+                <a th:href="@{/citoyen/profil}" class="sb-link">
+                    <i class="bi bi-person-circle sb-link-icon"></i> Mon profil
+                </a>
+                <a th:href="@{/citoyen/profil/modifier}" class="sb-link">
+                    <i class="bi bi-pencil-square sb-link-icon"></i> Modifier mes informations
+                </a>
+                <a th:href="@{/citoyen/profil/photo}" class="sb-link">
+                    <i class="bi bi-camera sb-link-icon"></i> Ma photo de profil
+                </a>
+            </div>
+
+        </nav>
+
+        <div class="sb-footer">
+            <a th:href="@{/logout}" class="sb-logout">
+                <i class="bi bi-box-arrow-left"></i> Déconnexion
+            </a>
+            <div class="sb-copyright">&copy; 2026 ASPU</div>
+        </div>
+    </div>
+
+    <!-- ══════════════ MAIN ══════════════ -->
+    <div class="main-content">
+
+        <!-- TOPBAR -->
+        <div class="aspu-topbar">
+            <div style="display:flex;align-items:center;gap:14px;">
+                <button class="sb-toggle"
+                        onclick="const s=document.getElementById('sidebar-wrapper');s.style.transform=s.style.transform==='translateX(0px)'?'translateX(-260px)':'translateX(0px)'">
+                    <i class="bi bi-list"></i>
+                </button>
+                <div class="topbar-left">
+                    <h1 th:text="${pageTitle}">Tableau de bord</h1>
+                    <p id="topbarDate"></p>
+                </div>
+            </div>
+            <div class="topbar-actions">
+                <div class="topbar-date">
+                    <i class="bi bi-calendar3"></i>
+                    <span id="topbarDateBadge"></span>
+                </div>
+                <!-- Cloche notifications (citoyen uniquement) -->
+                <div th:if="${role == 'CITOYEN'}" style="position:relative;">
+                    <button class="notif-btn" onclick="toggleNotifPanel()" id="notifBtn">
+                        <i class="bi bi-bell"></i>
+                        <span class="notif-badge" id="notifBadge"
+                              th:if="${nbNotifications != null and nbNotifications > 0}"
+                              th:text="${nbNotifications > 9 ? '9+' : nbNotifications}">0</span>
+                    </button>
+                </div>
+                <div class="topbar-user" tabindex="0">
+                    <th:block th:if="${currentUser != null and currentUser.photoPath != null}">
+                        <img class="topbar-avatar-photo" th:src="@{${currentUser.photoPath}}" alt="Photo">
+                    </th:block>
+                    <th:block th:unless="${currentUser != null and currentUser.photoPath != null}">
+                        <div class="topbar-avatar-placeholder"><i class="bi bi-person"></i></div>
+                    </th:block>
+                    <span class="topbar-username"
+                          th:text="${currentUser != null ? currentUser.prenom + ' ' + currentUser.nom : 'Utilisateur'}">
+                    </span>
+                    <i class="bi bi-chevron-down topbar-chevron"></i>
+
+                    <!-- DROPDOWN -->
+                    <div class="topbar-dropdown">
+                        <div class="dd-header">
+                            <th:block th:if="${currentUser != null and currentUser.photoPath != null}">
+                                <img class="dd-header-photo" th:src="@{${currentUser.photoPath}}" alt="Photo">
+                            </th:block>
+                            <th:block th:unless="${currentUser != null and currentUser.photoPath != null}">
+                                <div class="dd-header-placeholder"><i class="bi bi-person"></i></div>
+                            </th:block>
+                            <div>
+                                <div class="dd-header-name"
+                                     th:text="${currentUser != null ? currentUser.prenom + ' ' + currentUser.nom : 'Utilisateur'}"></div>
+                                <div class="dd-header-email"
+                                     th:text="${currentUser != null ? currentUser.email : ''}"></div>
+                            </div>
+                        </div>
+                        <a th:href="@{/citoyen/profil}"        class="dd-item" sec:authorize="hasRole('CITOYEN')"><i class="bi bi-person-circle"></i> Mon profil</a>
+                        <a th:href="@{/citoyen/profil/modifier}" class="dd-item" sec:authorize="hasRole('CITOYEN')"><i class="bi bi-pencil-square"></i> Modifier mes infos</a>
+                        <a th:href="@{/administrateur/profil}" class="dd-item" sec:authorize="hasRole('ADMINISTRATEUR')"><i class="bi bi-person-circle"></i> Mon profil</a>
+                        <a th:href="@{/administrateur/profil/modifier}" class="dd-item" sec:authorize="hasRole('ADMINISTRATEUR')"><i class="bi bi-pencil-square"></i> Modifier mes infos</a>
+                        <a th:href="@{/superadmin/profil}"     class="dd-item" sec:authorize="hasRole('SUPERADMIN')"><i class="bi bi-person-circle"></i> Mon profil</a>
+                        <hr class="dd-divider">
+                        <a th:href="@{/logout}" class="dd-item dd-logout"><i class="bi bi-box-arrow-right"></i> Déconnexion</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- PAGE CONTENT -->
+        <div class="page-content" th:replace="${content}"></div>
+
+        <!-- FOOTER -->
+        <footer class="aspu-footer">
+            &copy; 2026 ASPU &mdash; Application de Signalement des Problèmes Urbains.
+        </footer>
+    </div>
+</div>
+
+<!-- ══ PANNEAU NOTIFICATIONS ══ -->
+<div class="notif-overlay" id="notifOverlay" onclick="toggleNotifPanel()"></div>
+<div class="notif-panel" id="notifPanel">
+    <div class="notif-header">
+        <div class="notif-header-title"><i class="bi bi-bell-fill"></i> Notifications</div>
+        <div style="display:flex;gap:8px;align-items:center;">
+            <button class="btn-notif-lues" onclick="marquerToutesLues()">Tout marquer lu</button>
+            <button class="btn-notif-close" onclick="toggleNotifPanel()"><i class="bi bi-x"></i></button>
+        </div>
+    </div>
+    <div class="notif-list" id="notifList">
+        <div class="notif-empty"><i class="bi bi-bell-slash"></i><p>Aucune notification</p></div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script th:src="@{/js/main.js}" defer></script>
+<script>
+    const now = new Date();
+    const opts = { weekday:'long', day:'numeric', month:'long', year:'numeric' };
+    const dateStr = now.toLocaleDateString('fr-FR', opts);
+    document.getElementById('topbarDateBadge').textContent = dateStr;
+    document.getElementById('topbarDate').textContent = dateStr;
+    document.querySelectorAll('.sb-link').forEach(a => {
+        try { if (window.location.pathname === new URL(a.href, location.origin).pathname) a.classList.add('active'); } catch(e) {}
+    });
+</script>
+<script th:if="${role == 'CITOYEN'}" th:inline="javascript">
+    const _citoyenId = /*[[${currentUser?.id}]]*/ null;
+
+    function toggleNotifPanel() {
+        document.getElementById('notifPanel').classList.toggle('open');
+        document.getElementById('notifOverlay').classList.toggle('open');
+        if (document.getElementById('notifPanel').classList.contains('open')) {
+            chargerNotifications();
+        }
+    }
+
+    async function chargerNotifications() {
+        if (!_citoyenId) return;
+        try {
+            const res = await fetch(`/api/citoyen/notifications?citoyenId=${_citoyenId}`);
+            if (!res.ok) return;
+            const notifs = await res.json();
+            const list = document.getElementById('notifList');
+            if (!notifs.length) {
+                list.innerHTML = '<div class="notif-empty"><i class="bi bi-bell-slash"></i><p>Aucune notification</p></div>';
+                return;
+            }
+            list.innerHTML = notifs.map(n => `
+                <div class="notif-item ${n.lue ? '' : 'non-lue'}"
+                     onclick="voirAnnonce(${n.annonce?.id})">
+                    <div class="notif-item-titre">
+                        ${!n.lue ? '<span class="notif-dot"></span>' : ''}
+                        ${n.titre}
+                    </div>
+                    <div class="notif-item-msg">${n.message.substring(0, 100)}...</div>
+                    <div class="notif-item-date">${new Date(n.dateCreation).toLocaleDateString('fr-FR', {day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'})}</div>
+                </div>`).join('');
+            // Mettre à jour badge
+            const nonLues = notifs.filter(n => !n.lue).length;
+            const badge = document.getElementById('notifBadge');
+            if (badge) badge.textContent = nonLues > 9 ? '9+' : nonLues || '';
+            if (badge && nonLues === 0) badge.style.display = 'none';
+        } catch(e) { console.error(e); }
+    }
+
+    async function marquerToutesLues() {
+        if (!_citoyenId) return;
+        await fetch(`/api/citoyen/notifications/lues?citoyenId=${_citoyenId}`, { method:'POST' });
+        document.querySelectorAll('.notif-item').forEach(i => i.classList.remove('non-lue'));
+        const badge = document.getElementById('notifBadge');
+        if (badge) badge.style.display = 'none';
+    }
+
+    function voirAnnonce(annonceId) {
+        if (annonceId) window.location.href = '/citoyen/annonces';
+        toggleNotifPanel();
+    }
+</script>
+</body>
+</html>

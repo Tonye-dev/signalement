@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+<div th:fragment="content">
+<style>
+    :root { --accent:#4f8ef7; --accent2:#38d9a9; --accent3:#f7934f; --bg:#f0f4fb; --card-bg:#fff; --text-main:#1a2236; --text-muted:#7b8fb5; --border:#e4eaf5; }
+    .page-header { margin-bottom:28px; }
+    .page-header h2 { font-family:'Syne',sans-serif; font-size:1.4rem; font-weight:800; color:var(--text-main); margin:0; }
+    .page-header p { font-size:.84rem; color:var(--text-muted); margin:6px 0 0; }
+    .search-wrap { position:relative; margin-bottom:20px; max-width:380px; }
+    .search-wrap input { width:100%; background:var(--card-bg); border:1px solid var(--border); border-radius:10px; padding:10px 14px 10px 38px; font-size:.84rem; color:var(--text-main); outline:none; transition:border .18s; }
+    .search-wrap input:focus { border-color:var(--accent); }
+    .search-wrap i { position:absolute; left:13px; top:50%; transform:translateY(-50%); color:var(--text-muted); }
+    .mairies-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(280px,1fr)); gap:18px; }
+    .mairie-card { background:var(--card-bg); border-radius:18px; border:1px solid var(--border); overflow:hidden; animation:slideUp .4s ease both; transition:transform .2s,box-shadow .2s; text-decoration:none; display:block; }
+    .mairie-card:hover { transform:translateY(-5px); box-shadow:0 14px 36px rgba(0,0,0,.1); }
+    .mairie-photo { width:100%; height:140px; object-fit:cover; display:block; }
+    .mairie-photo-placeholder { width:100%; height:140px; background:linear-gradient(135deg,#e4eaf5,#f0f4fb); display:flex; align-items:center; justify-content:center; font-size:2.5rem; color:var(--text-muted); }
+    .mairie-body { padding:18px; }
+    .mairie-nom { font-family:'Syne',sans-serif; font-weight:800; font-size:1rem; color:var(--text-main); margin-bottom:6px; }
+    .mairie-adresse { font-size:.78rem; color:var(--text-muted); display:flex; align-items:center; gap:5px; margin-bottom:10px; }
+    .mairie-desc { font-size:.8rem; color:var(--text-muted); line-height:1.5; margin-bottom:12px; overflow:hidden; max-height:3em; }
+    .mairie-footer { display:flex; align-items:center; justify-content:space-between; }
+    .mairie-contact { font-size:.74rem; color:var(--text-muted); display:flex; align-items:center; gap:5px; }
+    .btn-voir { background:var(--accent); color:#fff; border-radius:8px; padding:6px 14px; font-size:.78rem; font-weight:600; text-decoration:none; display:inline-flex; align-items:center; gap:5px; transition:background .18s; }
+    .btn-voir:hover { background:#3a7de8; color:#fff; }
+    .empty-state { padding:60px; text-align:center; color:var(--text-muted); }
+    .empty-state i { font-size:3rem; opacity:.2; display:block; margin-bottom:14px; }
+    @keyframes slideUp { from{opacity:0;transform:translateY(18px)} to{opacity:1;transform:translateY(0)} }
+    @media(max-width:600px) { .mairies-grid { grid-template-columns:1fr; } }
+</style>
+
+<div class="page-header">
+    <h2><i class="bi bi-building me-2" style="color:var(--accent);"></i>Les mairies</h2>
+    <p>Consultez les informations et annonces de toutes les mairies de la plateforme</p>
+</div>
+
+<div class="search-wrap">
+    <i class="bi bi-search"></i>
+    <input type="text" id="searchInput" placeholder="Rechercher une mairie...">
+</div>
+
+<div th:if="${mairies == null or mairies.isEmpty()}" class="empty-state">
+    <i class="bi bi-building-x"></i>
+    <p>Aucune mairie enregistrée pour le moment.</p>
+</div>
+
+<div class="mairies-grid" id="mairiesGrid" th:unless="${mairies == null or mairies.isEmpty()}">
+    <a th:each="m, stat : ${mairies}"
+       th:href="@{/mairies/{id}(id=${m.id})}"
+       class="mairie-card"
+       th:style="'animation-delay:' + ${stat.index * 0.07} + 's'">
+
+        <img th:if="${m.photoPath != null}" th:src="@{${m.photoPath}}"
+             alt="" class="mairie-photo">
+        <div th:unless="${m.photoPath != null}" class="mairie-photo-placeholder">
+            <i class="bi bi-building"></i>
+        </div>
+
+        <div class="mairie-body">
+            <div class="mairie-nom" th:text="${m.nom}">Nom</div>
+            <div class="mairie-adresse">
+                <i class="bi bi-geo-alt"></i>
+                <span th:text="${m.adresse}">Adresse</span>
+            </div>
+            <div class="mairie-desc" th:if="${m.description != null}" th:text="${m.description}">Description</div>
+            <div class="mairie-footer">
+                <span class="mairie-contact" th:if="${m.telephone != null}">
+                    <i class="bi bi-telephone"></i> <span th:text="${m.telephone}">Tel</span>
+                </span>
+                <span class="btn-voir">Voir <i class="bi bi-arrow-right"></i></span>
+            </div>
+        </div>
+    </a>
+</div>
+
+<script>
+    document.getElementById('searchInput')?.addEventListener('input', function() {
+        const val = this.value.toLowerCase();
+        document.querySelectorAll('.mairie-card').forEach(c =>
+            c.style.display = c.textContent.toLowerCase().includes(val) ? '' : 'none');
+    });
+</script>
+</div>
+</body>
+</html>

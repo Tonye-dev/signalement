@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+
+<!-- ══════════════════════════════════════════
+     DASHBOARD CITOYEN  –  fragment content
+     Controller : WebDashboardCitoyenController
+     DTO        : DashboardCitoyenDto
+══════════════════════════════════════════ -->
+<div th:fragment="content">
+
+<style>
+    :root {
+        --accent:  #4f8ef7;
+        --accent2: #38d9a9;
+        --accent3: #f7934f;
+        --accent4: #f76f8e;
+        --bg: #f0f4fb;
+        --card-bg: #ffffff;
+        --text-main: #1a2236;
+        --text-muted: #7b8fb5;
+        --border: #e4eaf5;
+    }
+
+    .section-title {
+        font-family: 'Syne', sans-serif;
+        font-size: .7rem;
+        font-weight: 700;
+        letter-spacing: .12em;
+        text-transform: uppercase;
+        color: var(--text-muted);
+        margin-bottom: 14px;
+        margin-top: 4px;
+    }
+
+    /* WELCOME BANNER */
+    .welcome-banner {
+        background: linear-gradient(120deg, #0d1f3c 0%, #163a5f 55%, #1a3a4f 100%);
+        border-radius: 18px;
+        padding: 22px 28px;
+        margin-bottom: 24px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        animation: slideUp .4s ease both;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .welcome-banner::before {
+        content: '';
+        position: absolute;
+        top: -50px; right: -50px;
+        width: 180px; height: 180px;
+        background: rgba(56,217,169,.08);
+        border-radius: 50%;
+    }
+
+    .welcome-banner::after {
+        content: '';
+        position: absolute;
+        bottom: -30px; right: 100px;
+        width: 100px; height: 100px;
+        background: rgba(79,142,247,.06);
+        border-radius: 50%;
+    }
+
+    .welcome-text h2 {
+        font-family: 'Syne', sans-serif;
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: #fff;
+        margin-bottom: 5px;
+    }
+
+    .welcome-text p { font-size: .78rem; color: rgba(255,255,255,.5); margin: 0; }
+
+    .btn-signal {
+        background: var(--accent);
+        color: #fff;
+        border: none;
+        border-radius: 12px;
+        padding: 11px 22px;
+        font-size: .84rem;
+        font-weight: 600;
+        text-decoration: none;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        transition: background .18s, transform .18s, box-shadow .18s;
+        position: relative;
+        z-index: 1;
+        white-space: nowrap;
+        flex-shrink: 0;
+    }
+
+    .btn-signal:hover {
+        background: #3a7de8;
+        color: #fff;
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(79,142,247,.35);
+    }
+
+    /* STAT GRID */
+    .stat-grid-4 {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 16px;
+        margin-bottom: 24px;
+    }
+
+    .stat-card {
+        background: var(--card-bg);
+        border-radius: 18px;
+        padding: 20px;
+        border: 1px solid var(--border);
+        display: flex;
+        align-items: flex-start;
+        gap: 14px;
+        position: relative;
+        overflow: hidden;
+        transition: box-shadow .22s, transform .22s;
+        animation: slideUp .5s ease both;
+    }
+
+    .stat-card:hover { box-shadow: 0 10px 30px rgba(0,0,0,.09); transform: translateY(-4px); }
+
+    .stat-card::before {
+        content: '';
+        position: absolute;
+        top: 0; left: 0; right: 0;
+        height: 3px;
+        border-radius: 18px 18px 0 0;
+    }
+
+    .sc-blue::before   { background: var(--accent); }
+    .sc-orange::before { background: var(--accent3); }
+    .sc-pink::before   { background: var(--accent4); }
+    .sc-green::before  { background: var(--accent2); }
+
+    .stat-icon {
+        width: 46px; height: 46px;
+        border-radius: 12px;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 1.2rem; flex-shrink: 0;
+    }
+
+    .sc-blue   .stat-icon { background: rgba(79,142,247,.12);  color: var(--accent); }
+    .sc-orange .stat-icon { background: rgba(247,147,79,.12);  color: var(--accent3); }
+    .sc-pink   .stat-icon { background: rgba(247,111,142,.12); color: var(--accent4); }
+    .sc-green  .stat-icon { background: rgba(56,217,169,.12);  color: var(--accent2); }
+
+    .stat-value {
+        font-family: 'Syne', sans-serif;
+        font-size: 2rem;
+        font-weight: 800;
+        line-height: 1;
+        color: var(--text-main);
+    }
+
+    .stat-label {
+        font-size: .73rem;
+        color: var(--text-muted);
+        margin-top: 5px;
+        text-transform: uppercase;
+        letter-spacing: .07em;
+    }
+
+    /* STATUT PROGRESS CARD */
+    .statut-card {
+        background: var(--card-bg);
+        border-radius: 18px;
+        border: 1px solid var(--border);
+        padding: 22px 24px;
+        margin-bottom: 16px;
+        animation: slideUp .5s ease .28s both;
+    }
+
+    .statut-card:hover { box-shadow: 0 8px 28px rgba(0,0,0,.07); }
+
+    .chart-header {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        margin-bottom: 18px;
+    }
+
+    .chart-title { font-family: 'Syne', sans-serif; font-size: .92rem; font-weight: 700; color: var(--text-main); }
+    .chart-sub   { font-size: .72rem; color: var(--text-muted); margin-top: 2px; }
+
+    .statut-row { display: flex; align-items: center; gap: 14px; margin-bottom: 16px; }
+    .statut-row:last-child { margin-bottom: 0; }
+
+    .statut-label {
+        min-width: 120px;
+        font-size: .8rem;
+        color: var(--text-muted);
+        display: flex; align-items: center; gap: 7px;
+    }
+
+    .statut-bar-wrap {
+        flex: 1;
+        background: var(--bg);
+        border-radius: 50px;
+        height: 10px;
+        overflow: hidden;
+    }
+
+    .statut-bar-fill {
+        height: 100%;
+        border-radius: 50px;
+        width: 0%;
+        transition: width 1.2s cubic-bezier(.4,0,.2,1);
+    }
+
+    .statut-count {
+        min-width: 30px;
+        text-align: right;
+        font-family: 'Syne', sans-serif;
+        font-weight: 700;
+        font-size: .88rem;
+        color: var(--text-main);
+    }
+
+    /* CHART CARDS */
+    .charts-row { display: grid; gap: 16px; margin-bottom: 16px; }
+    .cr-2 { grid-template-columns: 1fr 1fr; }
+
+    .chart-card {
+        background: var(--card-bg);
+        border-radius: 18px;
+        border: 1px solid var(--border);
+        padding: 22px 24px;
+        transition: box-shadow .22s;
+        animation: slideUp .5s ease both;
+    }
+
+    .chart-card:hover { box-shadow: 0 8px 28px rgba(0,0,0,.07); }
+
+    .chart-badge {
+        background: var(--bg);
+        border: 1px solid var(--border);
+        border-radius: 50px;
+        padding: 3px 11px;
+        font-size: .69rem;
+        color: var(--text-muted);
+        display: flex; align-items: center; gap: 5px;
+    }
+
+    /* ANIMATIONS */
+    @keyframes slideUp {
+        from { opacity: 0; transform: translateY(20px); }
+        to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .stat-card:nth-child(1) { animation-delay: .06s; }
+    .stat-card:nth-child(2) { animation-delay: .12s; }
+    .stat-card:nth-child(3) { animation-delay: .18s; }
+    .stat-card:nth-child(4) { animation-delay: .24s; }
+    .chart-card:nth-child(1){ animation-delay: .34s; }
+    .chart-card:nth-child(2){ animation-delay: .40s; }
+
+    @media (max-width: 1100px) {
+        .stat-grid-4 { grid-template-columns: repeat(2, 1fr); }
+        .cr-2 { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 600px) {
+        .stat-grid-4 { grid-template-columns: 1fr 1fr; }
+        .welcome-banner { flex-direction: column; gap: 16px; align-items: flex-start; }
+    }
+</style>
+
+<!-- BANNIÈRE BIENVENUE -->
+<div class="welcome-banner">
+    <div class="welcome-text">
+        <h2><i class="bi bi-person-check me-2"></i>Bienvenue sur votre espace citoyen</h2>
+        <p>Suivez vos signalements et contribuez à améliorer votre ville</p>
+    </div>
+    <a th:href="@{/citoyen/signaler}" class="btn-signal">
+        <i class="bi bi-plus-circle"></i> Nouveau signalement
+    </a>
+</div>
+
+<!-- STAT CARDS -->
+<p class="section-title"><i class="bi bi-grid-1x2 me-1"></i>Mes statistiques</p>
+<div class="stat-grid-4">
+
+    <div class="stat-card sc-blue">
+        <div class="stat-icon"><i class="bi bi-clipboard-data"></i></div>
+        <div>
+            <div class="stat-value counter" th:data-target="${dashboard.totalProblemes}">0</div>
+            <div class="stat-label">Total signalés</div>
+        </div>
+    </div>
+
+    <div class="stat-card sc-orange">
+        <div class="stat-icon"><i class="bi bi-flag"></i></div>
+        <div>
+            <div class="stat-value counter" th:data-target="${dashboard.problemesSignales}">0</div>
+            <div class="stat-label">Signalés</div>
+        </div>
+    </div>
+
+    <div class="stat-card sc-pink">
+        <div class="stat-icon"><i class="bi bi-arrow-repeat"></i></div>
+        <div>
+            <div class="stat-value counter" th:data-target="${dashboard.problemesEnCours}">0</div>
+            <div class="stat-label">En cours</div>
+        </div>
+    </div>
+
+    <div class="stat-card sc-green">
+        <div class="stat-icon"><i class="bi bi-check2-circle"></i></div>
+        <div>
+            <div class="stat-value counter" th:data-target="${dashboard.problemesResolus}">0</div>
+            <div class="stat-label">Résolus</div>
+        </div>
+    </div>
+
+</div>
+
+<!-- STATUTS PROGRESS -->
+<p class="section-title"><i class="bi bi-activity me-1"></i>Avancement</p>
+<div class="statut-card">
+    <div class="chart-header" style="margin-bottom:18px;">
+        <div>
+            <div class="chart-title">Suivi de vos signalements</div>
+            <div class="chart-sub">Répartition par statut en temps réel</div>
+        </div>
+    </div>
+
+    <div class="statut-row">
+        <div class="statut-label">
+            <i class="bi bi-flag" style="color:var(--accent3);"></i> Signalés
+        </div>
+        <div class="statut-bar-wrap">
+            <div class="statut-bar-fill" id="barSignale"
+                 style="background: linear-gradient(90deg, var(--accent3), #fbb16a);"></div>
+        </div>
+        <div class="statut-count" th:text="${dashboard.problemesSignales}">0</div>
+    </div>
+
+    <div class="statut-row">
+        <div class="statut-label">
+            <i class="bi bi-arrow-repeat" style="color:var(--accent4);"></i> En cours
+        </div>
+        <div class="statut-bar-wrap">
+            <div class="statut-bar-fill" id="barEnCours"
+                 style="background: linear-gradient(90deg, var(--accent4), #fb7185);"></div>
+        </div>
+        <div class="statut-count" th:text="${dashboard.problemesEnCours}">0</div>
+    </div>
+
+    <div class="statut-row">
+        <div class="statut-label">
+            <i class="bi bi-check2-circle" style="color:var(--accent2);"></i> Résolus
+        </div>
+        <div class="statut-bar-wrap">
+            <div class="statut-bar-fill" id="barResolu"
+                 style="background: linear-gradient(90deg, var(--accent2), #5eead4);"></div>
+        </div>
+        <div class="statut-count" th:text="${dashboard.problemesResolus}">0</div>
+    </div>
+</div>
+
+<!-- GRAPHIQUES -->
+<p class="section-title"><i class="bi bi-bar-chart me-1"></i>Analyses</p>
+<div class="charts-row cr-2">
+
+    <div class="chart-card">
+        <div class="chart-header">
+            <div>
+                <div class="chart-title">Évolution mensuelle</div>
+                <div class="chart-sub">Vos signalements par mois</div>
+            </div>
+            <span class="chart-badge"><i class="bi bi-graph-up"></i> Ligne</span>
+        </div>
+        <canvas id="chartMois" height="230"></canvas>
+    </div>
+
+    <div class="chart-card">
+        <div class="chart-header">
+            <div>
+                <div class="chart-title">Répartition par Type</div>
+                <div class="chart-sub">Catégories de vos problèmes</div>
+            </div>
+            <span class="chart-badge"><i class="bi bi-pie-chart"></i> Donut</span>
+        </div>
+        <div style="max-width:260px; margin:0 auto;">
+            <canvas id="chartTypes" height="260"></canvas>
+        </div>
+    </div>
+
+</div>
+
+<!-- DATA BRIDGE -->
+<div id="chartData"
+     th:data-mois-labels="${#strings.listJoin(dashboard.problemesParMois.keySet(), '|')}"
+     th:data-mois-values="${#strings.listJoin(dashboard.problemesParMois.values(), ',')}"
+     th:data-types-labels="${#strings.listJoin(dashboard.repartitionParType.keySet(), '|')}"
+     th:data-types-values="${#strings.listJoin(dashboard.repartitionParType.values(), ',')}"
+     th:data-signale="${dashboard.problemesSignales}"
+     th:data-encours="${dashboard.problemesEnCours}"
+     th:data-resolu="${dashboard.problemesResolus}"
+     th:data-total="${dashboard.totalProblemes}"
+     style="display:none;">
+</div>
+
+<script>
+(function() {
+    function toArr(str)  { return (!str || !str.trim()) ? [] : str.split('|').map(s => s.trim()); }
+    function toNums(str) { return (!str || !str.trim()) ? [] : str.split(',').map(s => Number(s.trim())); }
+
+    const d = document.getElementById('chartData');
+    const moisLabels  = toArr(d.dataset.moisLabels);
+    const moisData    = toNums(d.dataset.moisValues);
+    const typesLabels = toArr(d.dataset.typesLabels);
+    const typesData   = toNums(d.dataset.typesValues);
+    const signale = Number(d.dataset.signale) || 0;
+    const enCours = Number(d.dataset.encours) || 0;
+    const resolu  = Number(d.dataset.resolu)  || 0;
+    const total   = Number(d.dataset.total)   || 1;
+
+    /* Counters */
+    function animateCounter(el) {
+        const target = parseInt(el.dataset.target) || 0;
+        const step = target / 55;
+        let cur = 0;
+        const t = setInterval(() => {
+            cur += step;
+            if (cur >= target) { cur = target; clearInterval(t); }
+            el.textContent = Math.floor(cur).toLocaleString('fr-FR');
+        }, 16);
+    }
+    const obs = new IntersectionObserver(e => {
+        if (e[0].isIntersecting) { document.querySelectorAll('.counter').forEach(animateCounter); obs.disconnect(); }
+    }, { threshold: 0.1 });
+    const fc = document.querySelector('.stat-card');
+    if (fc) obs.observe(fc);
+
+    /* Progress bars */
+    setTimeout(() => {
+        document.getElementById('barSignale').style.width = ((signale / total) * 100) + '%';
+        document.getElementById('barEnCours').style.width = ((enCours / total) * 100) + '%';
+        document.getElementById('barResolu').style.width  = ((resolu  / total) * 100) + '%';
+    }, 500);
+
+    /* Charts */
+    Chart.defaults.font.family = "'DM Sans', sans-serif";
+    Chart.defaults.color = '#7b8fb5';
+    const grid = 'rgba(180,196,228,.15)';
+    const tooltip = {
+        backgroundColor: '#0d1117', titleColor: '#fff',
+        bodyColor: 'rgba(255,255,255,.7)', padding: 12,
+        cornerRadius: 10, displayColors: true,
+        borderColor: 'rgba(255,255,255,.08)', borderWidth: 1
+    };
+    const colors = ['rgba(79,142,247,.82)','rgba(56,217,169,.82)','rgba(247,147,79,.82)',
+                    'rgba(247,111,142,.82)','rgba(167,139,250,.82)','rgba(6,182,212,.82)','rgba(251,191,36,.82)'];
+
+    new Chart(document.getElementById('chartMois'), {
+        type: 'line',
+        data: {
+            labels: moisLabels,
+            datasets: [{
+                label: 'Signalements', data: moisData,
+                borderColor: '#38d9a9', backgroundColor: 'rgba(56,217,169,.09)',
+                borderWidth: 2.5, fill: true, tension: 0.4,
+                pointBackgroundColor: '#38d9a9', pointBorderColor: '#fff',
+                pointBorderWidth: 2.5, pointRadius: 5, pointHoverRadius: 9
+            }]
+        },
+        options: {
+            responsive: true,
+            animation: { duration: 1100, easing: 'easeOutQuart' },
+            plugins: { legend: { display: false }, tooltip },
+            scales: {
+                x: { grid: { color: grid }, ticks: { font: { size: 11 } } },
+                y: { beginAtZero: true, grid: { color: grid }, ticks: { font: { size: 11 }, precision: 0 } }
+            }
+        }
+    });
+
+    new Chart(document.getElementById('chartTypes'), {
+        type: 'doughnut',
+        data: {
+            labels: typesLabels,
+            datasets: [{ data: typesData, backgroundColor: colors, borderWidth: 2.5, borderColor: '#fff', hoverOffset: 10 }]
+        },
+        options: {
+            responsive: true,
+            animation: { duration: 1000, animateRotate: true },
+            cutout: '70%',
+            plugins: {
+                legend: { position: 'bottom', labels: { padding: 14, usePointStyle: true, font: { size: 11 } } },
+                tooltip
+            }
+        }
+    });
+})();
+</script>
+
+</div>
+</body>
+</html>

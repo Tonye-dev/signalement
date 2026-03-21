@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+<div th:fragment="content">
+<style>
+    :root { --accent:#4f8ef7; --accent2:#38d9a9; --accent3:#f7934f; --accent4:#f76f8e; --bg:#f0f4fb; --card-bg:#fff; --text-main:#1a2236; --text-muted:#7b8fb5; --border:#e4eaf5; }
+    .page-header { margin-bottom:24px; }
+    .page-header h2 { font-family:'Syne',sans-serif; font-size:1.3rem; font-weight:800; color:var(--text-main); margin:0; }
+    .content-grid { display:grid; grid-template-columns:1fr 360px; gap:20px; align-items:start; }
+    .agents-list { display:flex; flex-direction:column; gap:10px; }
+    .agent-item { background:var(--card-bg); border-radius:14px; border:1px solid var(--border); padding:14px 16px; display:flex; align-items:center; gap:14px; animation:slideUp .4s ease both; transition:box-shadow .2s; }
+    .agent-item:hover { box-shadow:0 6px 18px rgba(0,0,0,.07); }
+    .agent-photo { width:46px; height:46px; border-radius:50%; object-fit:cover; border:2px solid var(--border); flex-shrink:0; }
+    .agent-placeholder { width:46px; height:46px; border-radius:50%; background:var(--bg); border:2px solid var(--border); flex-shrink:0; display:flex; align-items:center; justify-content:center; color:var(--text-muted); }
+    .agent-info { flex:1; }
+    .agent-nom { font-weight:600; font-size:.86rem; color:var(--text-main); }
+    .agent-poste { font-size:.74rem; color:var(--accent); margin-top:1px; }
+    .agent-service { font-size:.72rem; color:var(--text-muted); margin-top:2px; }
+    .btn-del { background:none; border:1px solid var(--border); border-radius:8px; padding:5px 10px; font-size:.78rem; color:var(--text-muted); cursor:pointer; transition:all .15s; }
+    .btn-del:hover { border-color:var(--accent4); color:var(--accent4); }
+    .form-card { background:var(--card-bg); border-radius:18px; border:1px solid var(--border); padding:24px; position:sticky; top:80px; animation:slideUp .4s ease .1s both; }
+    .form-card-title { font-family:'Syne',sans-serif; font-size:.88rem; font-weight:700; color:var(--text-main); margin-bottom:16px; display:flex; align-items:center; gap:7px; }
+    .form-card-title i { color:var(--accent2); }
+    .form-row { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+    .form-group { margin-bottom:12px; }
+    .form-label { display:block; font-size:.78rem; font-weight:600; color:var(--text-main); margin-bottom:5px; }
+    .form-label span { color:var(--accent4); }
+    .form-input { width:100%; background:var(--bg); border:1px solid var(--border); border-radius:10px; padding:9px 12px; font-size:.82rem; color:var(--text-main); outline:none; transition:border .18s; font-family:'DM Sans',sans-serif; }
+    .form-input:focus { border-color:var(--accent); }
+    select.form-input { cursor:pointer; }
+    .photo-upload-zone { border:2px dashed var(--border); border-radius:10px; padding:14px; text-align:center; cursor:pointer; transition:all .18s; background:var(--bg); display:flex; align-items:center; gap:10px; }
+    .photo-upload-zone:hover { border-color:var(--accent2); }
+    .photo-preview-sm { width:42px; height:42px; border-radius:50%; object-fit:cover; flex-shrink:0; }
+    .photo-placeholder-sm { width:42px; height:42px; border-radius:50%; background:var(--border); flex-shrink:0; display:flex; align-items:center; justify-content:center; color:var(--text-muted); }
+    .photo-upload-text { font-size:.78rem; color:var(--text-muted); text-align:left; }
+    .photo-upload-text span { color:var(--accent2); font-weight:600; }
+    .btn-ajouter { width:100%; background:var(--accent2); color:#fff; border:none; border-radius:10px; padding:11px; font-size:.86rem; font-weight:600; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:7px; margin-top:8px; transition:background .18s; }
+    .btn-ajouter:hover { background:#2bc99a; }
+    .empty-list { padding:40px; text-align:center; color:var(--text-muted); background:var(--card-bg); border-radius:14px; border:1px solid var(--border); }
+    .empty-list i { font-size:2rem; opacity:.2; display:block; margin-bottom:10px; }
+    @keyframes slideUp { from{opacity:0;transform:translateY(18px)} to{opacity:1;transform:translateY(0)} }
+    @media(max-width:900px) { .content-grid { grid-template-columns:1fr; } .form-card { position:static; } }
+</style>
+
+<div class="page-header">
+    <h2><i class="bi bi-people me-2" style="color:var(--accent2);"></i>Gestion du personnel</h2>
+    <p style="font-size:.82rem;color:var(--text-muted);margin:4px 0 0;">Agents et responsables affichés dans la vitrine publique</p>
+</div>
+
+<div class="content-grid">
+    <div>
+        <div th:if="${agents == null or agents.isEmpty()}" class="empty-list">
+            <i class="bi bi-people"></i><p>Aucun agent ajouté.</p>
+        </div>
+        <div class="agents-list" th:unless="${agents == null or agents.isEmpty()}">
+            <div th:each="a, stat : ${agents}" class="agent-item"
+                 th:id="'agent-' + ${a.id}"
+                 th:style="'animation-delay:' + ${stat.index * 0.05} + 's'">
+                <img th:if="${a.photoPath != null}" th:src="@{${a.photoPath}}" alt="" class="agent-photo">
+                <div th:unless="${a.photoPath != null}" class="agent-placeholder"><i class="bi bi-person"></i></div>
+                <div class="agent-info">
+                    <div class="agent-nom" th:text="${a.prenom + ' ' + a.nom}">Nom</div>
+                    <div class="agent-poste" th:text="${a.poste}">Poste</div>
+                    <div class="agent-service" th:if="${a.service != null}" th:text="${a.service.nom}">Service</div>
+                </div>
+                <button class="btn-del" th:data-id="${a.id}" onclick="supprimerAgent(this.dataset.id)">
+                    <i class="bi bi-trash3"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="form-card">
+        <div class="form-card-title"><i class="bi bi-person-plus"></i> Ajouter un agent</div>
+        <input type="hidden" id="adminId" th:value="${currentUser?.id}">
+        <div class="form-row">
+            <div class="form-group">
+                <label class="form-label">Prénom <span>*</span></label>
+                <input type="text" id="prenom" class="form-input" placeholder="Prénom">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Nom <span>*</span></label>
+                <input type="text" id="nom" class="form-input" placeholder="Nom">
+            </div>
+        </div>
+        <div class="form-group">
+            <label class="form-label">Poste <span>*</span></label>
+            <input type="text" id="poste" class="form-input" placeholder="Ex: Chef du service État Civil">
+        </div>
+        <div class="form-group">
+            <label class="form-label">Service rattaché</label>
+            <select id="serviceId" class="form-input">
+                <option value="">-- Aucun --</option>
+                <option th:each="s : ${services}" th:value="${s.id}" th:text="${s.nom}">Service</option>
+            </select>
+        </div>
+        <div class="form-row">
+            <div class="form-group">
+                <label class="form-label">Date de naissance</label>
+                <input type="date" id="dateNaissance" class="form-input">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Prise de fonction</label>
+                <input type="date" id="datePriseDeFonction" class="form-input">
+            </div>
+        </div>
+        <div class="form-group">
+            <label class="form-label">Photo</label>
+            <div class="photo-upload-zone" onclick="document.getElementById('photoAgent').click()">
+                <div class="photo-placeholder-sm" id="photoPreviewSm"><i class="bi bi-person"></i></div>
+                <div class="photo-upload-text">Cliquez pour ajouter une photo — <span>JPG, PNG</span></div>
+                <input type="file" id="photoAgent" accept="image/*" style="display:none;">
+            </div>
+        </div>
+        <button class="btn-ajouter" onclick="ajouterAgent()">
+            <i class="bi bi-person-plus"></i> Ajouter l'agent
+        </button>
+    </div>
+</div>
+
+<div id="toast" style="display:none;position:fixed;top:20px;right:20px;z-index:1000;background:#1a2236;color:#fff;padding:12px 20px;border-radius:12px;font-size:.84rem;">
+    <span id="toastMsg"></span>
+</div>
+
+<script>
+    function showToast(msg, ok=true) {
+        const t = document.getElementById('toast');
+        document.getElementById('toastMsg').textContent = msg;
+        t.style.background = ok ? '#1a2236' : '#f76f8e';
+        t.style.display = 'block';
+        setTimeout(() => t.style.display = 'none', 3000);
+    }
+    document.getElementById('photoAgent').addEventListener('change', function() {
+        if (this.files[0]) {
+            const img = document.createElement('img');
+            img.src = URL.createObjectURL(this.files[0]);
+            img.className = 'photo-preview-sm'; img.id = 'photoPreviewSm';
+            document.getElementById('photoPreviewSm').replaceWith(img);
+        }
+    });
+    async function ajouterAgent() {
+        const prenom = document.getElementById('prenom').value.trim();
+        const nom    = document.getElementById('nom').value.trim();
+        const poste  = document.getElementById('poste').value.trim();
+        if (!prenom || !nom || !poste) { showToast('Prénom, nom et poste obligatoires.', false); return; }
+        const fd = new FormData();
+        fd.append('adminId', document.getElementById('adminId').value);
+        fd.append('prenom', prenom); fd.append('nom', nom); fd.append('poste', poste);
+        const svc = document.getElementById('serviceId').value;
+        if (svc) fd.append('serviceId', svc);
+        const dn = document.getElementById('dateNaissance').value;
+        if (dn) fd.append('dateNaissance', dn);
+        const dpf = document.getElementById('datePriseDeFonction').value;
+        if (dpf) fd.append('datePriseDeFonction', dpf);
+        const photo = document.getElementById('photoAgent').files[0];
+        if (photo) fd.append('photo', photo);
+        try {
+            const res = await fetch('/api/administrateur/vitrine/personnel', { method:'POST', body:fd });
+            if (res.ok) { showToast('Agent ajouté !'); setTimeout(() => location.reload(), 1000); }
+            else showToast('Erreur.', false);
+        } catch { showToast('Erreur réseau.', false); }
+    }
+    async function supprimerAgent(id) {
+        if (!confirm('Supprimer cet agent ?')) return;
+        try {
+            const res = await fetch(`/api/administrateur/vitrine/personnel/${id}`, { method:'DELETE' });
+            if (res.ok) { document.getElementById('agent-' + id)?.remove(); showToast('Supprimé.'); }
+            else showToast('Erreur.', false);
+        } catch { showToast('Erreur réseau.', false); }
+    }
+</script>
+</div>
+</body>
+</html>

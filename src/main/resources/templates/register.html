@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<head>
+<meta charset="UTF-8">
+<title>Inscription - ASPU</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+
+<style>
+body {
+    background: linear-gradient(135deg,#2c7be5,#6ea8fe);
+    height:100vh;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+.register-card {
+    width: 450px;
+    background:white;
+    padding: 40px;
+    border-radius:12px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+}
+
+.register-card h3 {
+    font-weight:bold;
+    color:#2c7be5;
+    text-align:center;
+    margin-bottom:5px;
+}
+
+.register-card p.subtitle {
+    font-size:14px;
+    color:#777;
+    text-align:center;
+    margin-bottom:25px;
+}
+
+.form-control {
+    padding:12px;
+}
+
+.btn-register {
+    padding:12px;
+    font-weight:bold;
+}
+
+#previewPhoto {
+    max-width:120px;
+    max-height:120px;
+    margin-top:10px;
+    display:none;
+    border-radius:50%;
+    border:2px solid #2c7be5;
+}
+
+.toast-container {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 1055;
+}
+
+#confirmationMessage {
+    display:none;
+    text-align:center;
+    margin-top:50px;
+    animation: fadeIn 1s ease-in-out;
+}
+
+@keyframes fadeIn {
+    from { opacity:0; transform: translateY(-20px);}
+    to { opacity:1; transform: translateY(0);}
+}
+
+.bottom-text {
+    font-size:14px;
+    text-align:center;
+    margin-top:20px;
+}
+
+.bottom-text a {
+    font-weight:bold;
+    text-decoration:none;
+    color:#2c7be5;
+}
+
+.bottom-text a:hover {
+    text-decoration:underline;
+}
+</style>
+</head>
+
+<body>
+
+<div class="register-card" id="formContainer">
+
+    <h3>Créer un compte citoyen</h3>
+    <p class="subtitle">Plateforme de signalement des problèmes urbains</p>
+
+    <form id="registerForm">
+
+        <div class="mb-3">
+            <input type="text" id="nom" class="form-control" placeholder="Nom" required>
+        </div>
+
+        <div class="mb-3">
+            <input type="text" id="prenom" class="form-control" placeholder="Prénom" required>
+        </div>
+
+        <div class="mb-3">
+            <input type="email" id="email" class="form-control" placeholder="Email" required>
+        </div>
+
+        <div class="mb-3">
+            <input type="text" id="telephone" class="form-control" placeholder="Téléphone" required>
+        </div>
+
+        <div class="mb-3">
+            <input type="text" id="adresse" class="form-control" placeholder="Adresse" required>
+        </div>
+
+        <div class="mb-3">
+            <input type="password" id="motdepasse" class="form-control" placeholder="Mot de passe" required>
+        </div>
+
+        <div class="mb-3">
+            <input type="file" id="photo" class="form-control" accept="image/*">
+            <img id="previewPhoto" src="#" alt="Prévisualisation">
+        </div>
+
+        <button type="submit" id="submitBtn" class="btn btn-primary btn-register w-100">
+            S'inscrire
+            <span id="spinner" class="spinner-border spinner-border-sm ms-2 d-none"></span>
+        </button>
+
+    </form>
+
+    <div class="bottom-text">
+        Déjà un compte ? <a th:href="@{/login}">Se connecter</a>
+    </div>
+
+</div>
+
+<!-- Confirmation message central -->
+<div class="container" id="confirmationMessage">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="alert alert-info text-center">
+                <h4>Merci !</h4>
+                <p>Un email de confirmation a été envoyé à votre adresse. Cliquez sur le lien pour activer votre compte.</p>
+                <a href="/login" class="btn btn-primary">Aller à la page de connexion</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Toast container -->
+<div class="toast-container" id="toastContainer"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+
+    const form = document.getElementById("registerForm");
+    const submitBtn = document.getElementById("submitBtn");
+    const photoInput = document.getElementById("photo");
+    const previewPhoto = document.getElementById("previewPhoto");
+    const toastContainer = document.getElementById("toastContainer");
+    const formContainer = document.getElementById("formContainer");
+    const confirmationMessage = document.getElementById("confirmationMessage");
+    const spinner = document.getElementById("spinner");
+
+    // Prévisualisation photo
+    photoInput.addEventListener("change", function() {
+        const file = photoInput.files[0];
+        if(file){
+            previewPhoto.src = URL.createObjectURL(file);
+            previewPhoto.style.display = "block";
+        } else {
+            previewPhoto.style.display = "none";
+        }
+    });
+
+    // Affichage toast
+    function showToast(message, type="info") {
+        const toastEl = document.createElement("div");
+        toastEl.className = `toast align-items-center text-bg-${type} border-0`;
+        toastEl.setAttribute("role", "alert");
+        toastEl.setAttribute("aria-live", "assertive");
+        toastEl.setAttribute("aria-atomic", "true");
+
+        toastEl.innerHTML = `
+            <div class="d-flex">
+                <div class="toast-body">${message}</div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+        `;
+        toastContainer.appendChild(toastEl);
+
+        const toast = new bootstrap.Toast(toastEl, { delay: 5000 });
+        toast.show();
+
+        toastEl.addEventListener("hidden.bs.toast", () => toastEl.remove());
+    }
+
+    form.addEventListener("submit", async function(e) {
+        e.preventDefault();
+
+        submitBtn.disabled = true;
+        spinner.classList.remove("d-none");
+
+        const citoyen = {
+            nom: document.getElementById("nom").value,
+            prenom: document.getElementById("prenom").value,
+            email: document.getElementById("email").value,
+            telephone: document.getElementById("telephone").value,
+            adresse: document.getElementById("adresse").value,
+            motdepasse: document.getElementById("motdepasse").value
+        };
+
+        const formData = new FormData();
+        formData.append("citoyen", new Blob([JSON.stringify(citoyen)], { type: "application/json" }));
+        const photo = photoInput.files[0];
+        if(photo) formData.append("photo", photo);
+
+        try {
+            const response = await fetch("/api/auth/inscription/citoyen", {
+                method: "POST",
+                body: formData
+            });
+
+            const text = await response.text();
+
+            if(response.ok){
+                // Masquer formulaire et afficher message central
+                formContainer.style.display = "none";
+                confirmationMessage.style.display = "block";
+            } else {
+                showToast("Erreur : " + text, "danger");
+            }
+
+        } catch(err) {
+            console.error("Erreur réseau:", err);
+            showToast("Erreur réseau, veuillez réessayer", "danger");
+        }
+
+        submitBtn.disabled = false;
+        spinner.classList.add("d-none");
+    });
+
+});
+</script>
+</body>
+</html>
